@@ -6,7 +6,7 @@ import { trpc } from "@/utils/trpc";
 export default function Devices() {
   const [devices, setDevices] = useState([]);
   const { data: fetchedDevices, isLoading } = trpc.getDevices.useQuery();
-  const registerDeviceMutation = trpc.registerDevice.useMutation();
+  const registerDevice = trpc.registerDevice.useMutation();
 
   useEffect(() => {
     if (fetchedDevices) {
@@ -14,9 +14,9 @@ export default function Devices() {
     }
   }, [fetchedDevices]);
 
-  const registerDevice = async () => {
+  const register = async () => {
     try {
-      const newDevice = await registerDeviceMutation.mutateAsync({
+      const newDevice = await registerDevice.mutateAsync({
         name: "New Device",
       });
       setDevices([...devices, newDevice]);
@@ -31,7 +31,7 @@ export default function Devices() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Manage Devices</h1>
       <button
-        onClick={registerDevice}
+        onClick={register}
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
       >
         Register New Device
