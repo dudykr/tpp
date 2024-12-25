@@ -4,8 +4,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { NoSSR } from "../components/util/no-ssr";
-
-const inter = Inter({ subsets: ["latin"] });
+import { TrpcProvider } from "./trpc-provider";
 
 // export const metadata = {
 //   title: "Dudy TPP",
@@ -21,7 +20,9 @@ export default function RootLayout({
     <html lang="en">
       <NoSSR>
         <SessionProvider>
-          <body className={inter.className}>{children}</body>
+          <TrpcProvider>
+            <body>{children}</body>
+          </TrpcProvider>
         </SessionProvider>
       </NoSSR>
     </html>
