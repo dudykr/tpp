@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import { CreateNextContextOptions } from '@trpc/server/adapters/next'
 import { db } from './db'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/server/auth-optionns'
 
 export const createContext = async (opts: CreateNextContextOptions) => {
   const session = await getServerSession(authOptions)
