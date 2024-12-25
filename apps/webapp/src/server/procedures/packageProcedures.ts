@@ -1,21 +1,22 @@
 import { protectedProcedure } from "../trpc";
 import { z } from "zod";
-import { packages, packageMembers, users } from "../schema";
+import { packagesTable, packageMembersTable, usersTable } from "../schema";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { db } from "../db";
 
 export const packageProcedures = {
   getPackages: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.select().from(packages);
+    return db.select().from(packagesTable);
   }),
 
   getPackageDetails: protectedProcedure
     .input(z.object({ packageId: z.number() }))
     .query(async ({ input, ctx }) => {
-      const packageDetails = await ctx.db
+      const packageDetails = await db
         .select()
-        .from(packages)
-        .where(eq(packages.id, input.packageId))
+        .from(packagesTable)
+        .where(eq(packagesTable.id, input.packageId))
         .limit(1);
 
       if (packageDetails.length === 0) {
@@ -25,13 +26,13 @@ export const packageProcedures = {
         });
       }
 
-      const member = await ctx.db
+      const member = await db
         .select()
-        .from(packageMembers)
+        .from(packageMembersTable)
         .where(
           and(
-            eq(packageMembers.packageId, input.packageId),
-            eq(packageMembers.userId, ctx.user.id),
+            eq(packageMembersTable.packageId, input.packageId),
+            eq(packageMembersTable.userId, ctx.user.id),
           ),
         )
         .limit(1);
@@ -46,12 +47,12 @@ export const packageProcedures = {
   createPackage: protectedProcedure
     .input(z.object({ name: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const newPackage = await ctx.db
-        .insert(packages)
+      const newPackage = await db
+        .insert(packagesTable)
         .values({ ...input, ownerId: ctx.user.id })
         .returning();
-      await ctx.db
-        .insert(packageMembers)
+      await db
+        .insert(packageMembersTable)
         .values({ packageId: newPackage[0].id, userId: ctx.user.id });
       return newPackage[0];
     }),
@@ -59,25 +60,25 @@ export const packageProcedures = {
   getPackageMembers: protectedProcedure
     .input(z.object({ packageId: z.number() }))
     .query(async ({ input, ctx }) => {
-      const members = await ctx.db
+      const members = await db
         .select({
-          id: users.id,
-          name: users.name,
-          email: users.email,
+          id: usersTable.id,
+          name: usersTable.name,
+          email: usersTable.email,
         })
-        .from(packageMembers)
-        .innerJoin(users, eq(packageMembers.userId, users.id))
-        .where(eq(packageMembers.packageId, input.packageId));
+        .from(packageMembersTable)
+        .innerJoin(usersTable, eq(packageMembersTable.userId, usersTable.id))
+        .where(eq(packageMembersTable.packageId, input.packageId));
       return members;
     }),
 
   addPackageMember: protectedProcedure
     .input(z.object({ packageId: z.number(), email: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
-      const user = await ctx.db
+      const user = await db
         .select()
-        .from(users)
-        .where(eq(users.email, input.email))
+        .from(usersTable)
+        .where(eq(usersTable.email, input.email))
         .limit(1);
 
       if (user.length === 0) {
@@ -87,7 +88,7 @@ export const packageProcedures = {
         });
       }
 
-      await ctx.db.insert(packageMembers).values({
+      await db.insert(packageMembersTable).values({
         packageId: input.packageId,
         userId: user[0].id,
       });
@@ -96,14 +97,14 @@ export const packageProcedures = {
     }),
 
   removePackageMember: protectedProcedure
-    .input(z.object({ packageId: z.number(), userId: z.number() }))
+    .input(z.object({ packageId: z.number(), userId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      await ctx.db
-        .delete(packageMembers)
+      await db
+        .delete(packageMembersTable)
         .where(
           and(
-            eq(packageMembers.packageId, input.packageId),
-            eq(packageMembers.userId, input.userId),
+            eq(packageMembersTable.packageId, input.packageId),
+            eq(packageMembersTable.userId, input.userId),
           ),
         );
 
