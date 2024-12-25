@@ -35,13 +35,13 @@ export const approvalProcedures = {
   createApprovalGroup: protectedProcedure
     .input(z.object({ packageId: z.number(), name: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const packageDetails = await ctx.db
+      const packageDetails = await db
         .select()
         .from(packagesTable)
         .where(eq(packagesTable.id, input.packageId))
         .limit(1);
 
-      const isMember = await ctx.db
+      const isMember = await db
         .select()
         .from(packageMembersTable)
         .where(
@@ -65,7 +65,7 @@ export const approvalProcedures = {
   addUserToApprovalGroup: protectedProcedure
     .input(z.object({ groupId: z.number(), userId: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      const packageDetails = await ctx.db
+      const packageDetails = await db
         .select()
         .from(approvalGroupsTable)
         .innerJoin(
@@ -75,7 +75,7 @@ export const approvalProcedures = {
         .where(eq(approvalGroupsTable.id, input.groupId))
         .limit(1);
 
-      const isMember = await ctx.db
+      const isMember = await db
         .select()
         .from(packageMembersTable)
         .where(
@@ -98,7 +98,7 @@ export const approvalProcedures = {
   removeUserFromApprovalGroup: protectedProcedure
     .input(z.object({ groupId: z.number(), userId: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      const packageDetails = await ctx.db
+      const packageDetails = await db
         .select()
         .from(approvalGroupsTable)
         .innerJoin(
@@ -108,7 +108,7 @@ export const approvalProcedures = {
         .where(eq(approvalGroupsTable.id, input.groupId))
         .limit(1);
 
-      const isMember = await ctx.db
+      const isMember = await db
         .select()
         .from(packageMembersTable)
         .where(
@@ -144,7 +144,7 @@ export const approvalProcedures = {
         .values({ requestId: input.requestId, userId: ctx.user.id });
 
       // Check if the request should be approved
-      const request = await ctx.db
+      const request = await db
         .select()
         .from(approvalRequestsTable)
         .where(eq(approvalRequestsTable.id, input.requestId))
