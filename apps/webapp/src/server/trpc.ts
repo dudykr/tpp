@@ -25,7 +25,10 @@ export const protectedProcedure = t.procedure.use(async (opts) => {
   return opts.next({
     ctx: {
       ...ctx,
-      user: ctx.session.user,
+      user: {
+        ...ctx.session.user,
+        id: (ctx.session.user as any).id as string,
+      },
     },
   });
 });
