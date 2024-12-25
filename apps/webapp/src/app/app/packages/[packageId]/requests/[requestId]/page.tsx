@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
 
 export default function ApprovalRequestDetails({
   params,

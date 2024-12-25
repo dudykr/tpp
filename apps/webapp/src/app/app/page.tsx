@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { withAuth } from "@/components/withAuth";
 
 export default function Dashboard() {
   return (

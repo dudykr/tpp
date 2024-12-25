@@ -2,7 +2,6 @@
 
 import { use, useState } from "react";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
 
 type Props = {
   params: Promise<{

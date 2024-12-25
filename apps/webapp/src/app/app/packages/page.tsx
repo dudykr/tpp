@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
 
 export default function Packages() {
   const { data: packages, isLoading } = trpc.getPackages.useQuery();

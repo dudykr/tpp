@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
+
 import { useRouter } from "next/navigation";
 
 export default function CreateApprovalRequest({
