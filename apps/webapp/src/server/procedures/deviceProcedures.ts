@@ -4,7 +4,7 @@ import { devicesTable } from "../schema";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 
-export const DeviceSchema = z.object({
+export const DeviceZodSchema = z.object({
   id: z.number(),
   name: z.string(),
   createdAt: z.date(),
@@ -13,7 +13,7 @@ export const DeviceSchema = z.object({
 export const deviceProcedures = {
   getDevices: protectedProcedure
     .input(z.void())
-    .output(z.array(DeviceSchema))
+    .output(z.array(DeviceZodSchema))
     .query(async ({ ctx }) => {
       return db
         .select({
@@ -27,7 +27,7 @@ export const deviceProcedures = {
 
   registerDevice: protectedProcedure
     .input(z.object({ name: z.string(), fcmToken: z.string() }))
-    .output(DeviceSchema)
+    .output(DeviceZodSchema)
     .mutation(async ({ input, ctx }) => {
       const [device] = await db
         .insert(devicesTable)
