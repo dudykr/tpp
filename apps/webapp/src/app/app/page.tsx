@@ -14,7 +14,7 @@ function Dashboard() {
         </Link>
         <Link href="/app/packages" className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
           <h2 className="text-xl font-semibold mb-2">Packages</h2>
-          <p>View and manage packages you're a member of</p>
+          <p>View and manage packages you&apos;re a member of</p>
         </Link>
       </div>
     </div>
