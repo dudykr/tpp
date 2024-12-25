@@ -30,7 +30,7 @@ function PackageApprovalConfig({ params }: { params: { packageId: string } }) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Package Approval Configuration</h1>
-        <p className="text-red-500">You do not have permission to modify this package's approval configuration.</p>
+        <p className="text-red-500">You do not have permission to modify this package&apos;s approval configuration.</p>
       </div>
     )
   }
