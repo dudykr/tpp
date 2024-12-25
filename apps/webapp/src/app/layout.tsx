@@ -7,10 +7,10 @@ import { NoSSR } from "../components/util/no-ssr";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
-  title: "Dudy Trustable",
-  description: "Open-proposal demonstration by @kdy1",
-};
+// export const metadata = {
+//   title: "Dudy TPP",
+//   description: "Open-proposal demonstration by @kdy1",
+// };
 
 export default function RootLayout({
   children,

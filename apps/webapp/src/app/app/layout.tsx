@@ -1,4 +1,4 @@
-import { authOptions } from "@/lib/server/auth-optionns";
+import { authOptions } from "@/lib/server/auth-options";
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 
@@ -20,7 +20,7 @@ export default async function AppLayout({
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold">Dudy Trustable</span>
+                <span className="text-xl font-bold">Dudy TPP</span>
               </div>
             </div>
             <div className="flex items-center">
