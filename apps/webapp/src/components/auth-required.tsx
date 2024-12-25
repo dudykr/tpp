@@ -14,7 +14,7 @@ export function AuthRequired({ children }: { children: React.ReactNode }) {
   }, [session, status, router]);
 
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return <>Loading...</>;
   }
 
   if (!session) {
