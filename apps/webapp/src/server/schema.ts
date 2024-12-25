@@ -106,7 +106,7 @@ export const devices = pgTable("devices", {
 export const packages = pgTable("packages", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  ownerId: integer("owner_id")
+  ownerId: text("owner_id")
     .references(() => users.id)
     .notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
