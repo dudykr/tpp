@@ -1,10 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { use, useState } from 'react'
 import { trpc } from '@/utils/trpc'
 import { withAuth } from '@/components/withAuth'
 
-function PackageApprovalConfig({ params }: { params: { packageId: string } }) {
+type Props={
+  params: Promise<{
+    packageId: string
+  }>
+};
+
+function PackageApprovalConfig(props: Props) {
+  const params=use(props.params);
   const [newGroupName, setNewGroupName] = useState('')
   const { data: packageDetails } = trpc.getPackageDetails.useQuery({ packageId: parseInt(params.packageId) })
   const { data: approvalGroups, isLoading, refetch } = trpc.getPackageApprovalGroups.useQuery({ packageId: parseInt(params.packageId) })
