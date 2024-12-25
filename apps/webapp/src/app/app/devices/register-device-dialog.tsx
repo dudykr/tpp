@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
+import "@/lib/firebase";
 import { getMessaging, getToken } from "firebase/messaging";
 
 export function RegisterDeviceDialog() {
