@@ -96,7 +96,7 @@ export const authenticators = pgTable(
 
 export const devices = pgTable("devices", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id")
+  userId: text("user_id")
     .references(() => users.id)
     .notNull(),
   name: text("name").notNull(),
@@ -119,7 +119,7 @@ export const packageMembers = pgTable(
     packageId: integer("package_id")
       .references(() => packages.id)
       .notNull(),
-    userId: integer("user_id")
+    userId: text("user_id")
       .references(() => users.id)
       .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -150,7 +150,7 @@ export const approvalGroupMembers = pgTable(
     groupId: integer("group_id")
       .references(() => approvalGroups.id)
       .notNull(),
-    userId: integer("user_id")
+    userId: text("user_id")
       .references(() => users.id)
       .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -182,7 +182,7 @@ export const approvals = pgTable(
     requestId: integer("request_id")
       .references(() => approvalRequests.id)
       .notNull(),
-    userId: integer("user_id")
+    userId: text("user_id")
       .references(() => users.id)
       .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
