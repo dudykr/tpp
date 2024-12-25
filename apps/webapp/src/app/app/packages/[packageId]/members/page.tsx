@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
 
-function PackageMembers({ params }: { params: { packageId: string } }) {
+export default function PackageMembers({
+  params,
+}: {
+  params: { packageId: string };
+}) {
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const { data: packageDetails } = trpc.getPackageDetails.useQuery({
     packageId: parseInt(params.packageId),
@@ -104,5 +107,3 @@ function PackageMembers({ params }: { params: { packageId: string } }) {
     </div>
   );
 }
-
-export default withAuth(PackageMembers);

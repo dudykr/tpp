@@ -4,7 +4,7 @@ import Link from "next/link";
 import { trpc } from "@/utils/trpc";
 import { withAuth } from "@/components/withAuth";
 
-function Packages() {
+export default function Packages() {
   const { data: packages, isLoading } = trpc.getPackages.useQuery();
 
   if (isLoading) return <div>Loading...</div>;
@@ -27,5 +27,3 @@ function Packages() {
     </div>
   );
 }
-
-export default withAuth(Packages);

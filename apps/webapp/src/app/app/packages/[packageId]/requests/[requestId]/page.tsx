@@ -4,7 +4,7 @@ import { useState } from "react";
 import { trpc } from "@/utils/trpc";
 import { withAuth } from "@/components/withAuth";
 
-function ApprovalRequestDetails({
+export default function ApprovalRequestDetails({
   params,
 }: {
   params: { packageId: string; requestId: string };
@@ -70,5 +70,3 @@ function ApprovalRequestDetails({
     </div>
   );
 }
-
-export default withAuth(ApprovalRequestDetails);

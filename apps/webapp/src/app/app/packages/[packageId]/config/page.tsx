@@ -10,7 +10,7 @@ type Props = {
   }>;
 };
 
-function PackageApprovalConfig(props: Props) {
+export default function PackageApprovalConfig(props: Props) {
   const params = use(props.params);
   const [newGroupName, setNewGroupName] = useState("");
   const { data: packageDetails } = trpc.getPackageDetails.useQuery({
@@ -87,5 +87,3 @@ function PackageApprovalConfig(props: Props) {
     </div>
   );
 }
-
-export default withAuth(PackageApprovalConfig);

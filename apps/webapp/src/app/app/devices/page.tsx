@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { trpc } from "@/utils/trpc";
 import { withAuth } from "@/components/withAuth";
 
-function Devices() {
+export default function Devices() {
   const [devices, setDevices] = useState([]);
   const { data: fetchedDevices, isLoading } = trpc.getDevices.useQuery();
   const registerDeviceMutation = trpc.registerDevice.useMutation();
@@ -54,5 +54,3 @@ function Devices() {
     </div>
   );
 }
-
-export default withAuth(Devices);

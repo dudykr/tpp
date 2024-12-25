@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
 
-function PackageDetails({ params }: { params: { packageId: string } }) {
+export default function PackageDetails({
+  params,
+}: {
+  params: { packageId: string };
+}) {
   const { data: packageDetails, isLoading } = trpc.getPackageDetails.useQuery({
     packageId: parseInt(params.packageId),
   });
@@ -52,5 +55,3 @@ function PackageDetails({ params }: { params: { packageId: string } }) {
     </div>
   );
 }
-
-export default withAuth(PackageDetails);

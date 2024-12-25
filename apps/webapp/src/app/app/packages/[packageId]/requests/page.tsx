@@ -4,7 +4,11 @@ import Link from "next/link";
 import { trpc } from "@/utils/trpc";
 import { withAuth } from "@/components/withAuth";
 
-function ApprovalRequests({ params }: { params: { packageId: string } }) {
+export default function ApprovalRequests({
+  params,
+}: {
+  params: { packageId: string };
+}) {
   const { data: requests, isLoading } = trpc.getApprovalRequests.useQuery({
     packageId: parseInt(params.packageId),
   });
@@ -43,5 +47,3 @@ function ApprovalRequests({ params }: { params: { packageId: string } }) {
     </div>
   );
 }
-
-export default withAuth(ApprovalRequests);

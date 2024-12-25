@@ -5,7 +5,11 @@ import { trpc } from "@/utils/trpc";
 import { withAuth } from "@/components/withAuth";
 import { useRouter } from "next/navigation";
 
-function CreateApprovalRequest({ params }: { params: { packageId: string } }) {
+export default function CreateApprovalRequest({
+  params,
+}: {
+  params: { packageId: string };
+}) {
   const [title, setTitle] = useState("");
   const createRequestMutation = trpc.createApprovalRequest.useMutation();
   const router = useRouter();
@@ -56,5 +60,3 @@ function CreateApprovalRequest({ params }: { params: { packageId: string } }) {
     </div>
   );
 }
-
-export default withAuth(CreateApprovalRequest);
