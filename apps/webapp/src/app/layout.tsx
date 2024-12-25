@@ -8,7 +8,7 @@ import { NoSSR } from "../components/util/no-ssr";
 const inter = Inter({ subsets: ["latin"] });
 
 // export const metadata = {
-//   title: "Dudy Trustable",
+//   title: "Dudy TPP",
 //   description: "Open-proposal demonstration by @kdy1",
 // };
 

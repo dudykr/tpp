@@ -1,5 +1,5 @@
 {
-  "name": "@dudykr/trustable-workspace",
+  "name": "@dudykr/tpp-workspace",
   "packageManager": "pnpm@9.15.1",
   "engines": {
     "node": "20"
