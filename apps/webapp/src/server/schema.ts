@@ -100,6 +100,7 @@ export const devices = pgTable("devices", {
     .references(() => users.id)
     .notNull(),
   name: text("name").notNull(),
+  fcmToken: text("fcm_token").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
