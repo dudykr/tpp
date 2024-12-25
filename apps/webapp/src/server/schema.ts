@@ -17,7 +17,7 @@ export const approvalRequestStatusEnum = pgEnum("approval_request_status", [
   "rejected",
 ]);
 
-export const users = pgTable("user", {
+export const usersTable = pgTable("user", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -27,12 +27,12 @@ export const users = pgTable("user", {
   image: text("image"),
 });
 
-export const accounts = pgTable(
+export const accountsTable = pgTable(
   "account",
   {
     userId: text("userId")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     type: text("type").$type<AdapterAccount["type"]>().notNull(),
     provider: text("provider").notNull(),
     providerAccountId: text("providerAccountId").notNull(),
@@ -51,15 +51,15 @@ export const accounts = pgTable(
   }),
 );
 
-export const sessions = pgTable("session", {
+export const sessionsTable = pgTable("session", {
   sessionToken: text("sessionToken").primaryKey(),
   userId: text("userId")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => usersTable.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
-export const verificationTokens = pgTable(
+export const verificationTokensTable = pgTable(
   "verificationToken",
   {
     identifier: text("identifier").notNull(),
@@ -79,7 +79,7 @@ export const authenticators = pgTable(
     credentialID: text("credentialID").notNull().unique(),
     userId: text("userId")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     providerAccountId: text("providerAccountId").notNull(),
     credentialPublicKey: text("credentialPublicKey").notNull(),
     counter: integer("counter").notNull(),
@@ -94,34 +94,34 @@ export const authenticators = pgTable(
   }),
 );
 
-export const devices = pgTable("devices", {
+export const devicesTable = pgTable("devices", {
   id: serial("id").primaryKey(),
   userId: text("user_id")
-    .references(() => users.id)
+    .references(() => usersTable.id)
     .notNull(),
   name: text("name").notNull(),
   fcmToken: text("fcm_token").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const packages = pgTable("packages", {
+export const packagesTable = pgTable("packages", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   ownerId: text("owner_id")
-    .references(() => users.id)
+    .references(() => usersTable.id)
     .notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const packageMembers = pgTable(
+export const packageMembersTable = pgTable(
   "package_members",
   {
     id: serial("id").primaryKey(),
     packageId: integer("package_id")
-      .references(() => packages.id)
+      .references(() => packagesTable.id)
       .notNull(),
     userId: text("user_id")
-      .references(() => users.id)
+      .references(() => usersTable.id)
       .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -135,24 +135,24 @@ export const packageMembers = pgTable(
   },
 );
 
-export const approvalGroups = pgTable("approval_groups", {
+export const approvalGroupsTable = pgTable("approval_groups", {
   id: serial("id").primaryKey(),
   packageId: integer("package_id")
-    .references(() => packages.id)
+    .references(() => packagesTable.id)
     .notNull(),
   name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const approvalGroupMembers = pgTable(
+export const approvalGroupMembersTable = pgTable(
   "approval_group_members",
   {
     id: serial("id").primaryKey(),
     groupId: integer("group_id")
-      .references(() => approvalGroups.id)
+      .references(() => approvalGroupsTable.id)
       .notNull(),
     userId: text("user_id")
-      .references(() => users.id)
+      .references(() => usersTable.id)
       .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -166,25 +166,25 @@ export const approvalGroupMembers = pgTable(
   },
 );
 
-export const approvalRequests = pgTable("approval_requests", {
+export const approvalRequestsTable = pgTable("approval_requests", {
   id: serial("id").primaryKey(),
   packageId: integer("package_id")
-    .references(() => packages.id)
+    .references(() => packagesTable.id)
     .notNull(),
   title: text("title").notNull(),
   status: approvalRequestStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const approvals = pgTable(
+export const approvalsTable = pgTable(
   "approvals",
   {
     id: serial("id").primaryKey(),
     requestId: integer("request_id")
-      .references(() => approvalRequests.id)
+      .references(() => approvalRequestsTable.id)
       .notNull(),
     userId: text("user_id")
-      .references(() => users.id)
+      .references(() => usersTable.id)
       .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
