@@ -1,0 +1,94 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["TEST_REAL_DB"],
+  "tasks": {
+    "dev": {
+      "dependsOn": ["db:build", "db:push", "^build:api"],
+      "cache": false,
+      "persistent": true
+    },
+    "db:push": {
+      "inputs": ["prisma/schema.prisma"],
+      "cache": false,
+      "outputLogs": "new-only"
+    },
+    "db:build": {
+      "inputs": ["prisma/schema.prisma"],
+      "outputs": ["lib/generated/**/*.ts"],
+      "outputLogs": "new-only"
+    },
+    "build:full": {
+      "dependsOn": ["db:build", "build:api"],
+      "inputs": [
+        "package.json",
+        "tsconfig.json",
+        "next.config.js",
+        "tailwind.config.ts",
+        "!.next/**",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.md"
+      ],
+      "outputs": [".next/**", "out/**"],
+      "outputLogs": "new-only"
+    },
+    "build:api": {
+      "dependsOn": ["db:build", "^build:api"],
+      "inputs": [
+        "**/*.proto",
+        "**/*.go",
+        "**/*.ts",
+        "**/*.tsx",
+        "tsconfig.json",
+        "!.next/**",
+        "!*/**/*.test.ts",
+        "!*/**/*.test.tsx",
+        "!*/**/*.e2e.ts",
+        "!*/**/*.e2e.tsx",
+        "!*/**/*.cy.ts"
+      ],
+      "outputLogs": "new-only",
+      "cache": true
+    },
+    "build": {
+      "dependsOn": ["db:build", "build:api", "build:full"]
+    },
+    "test:install": {
+      "outputLogs": "new-only",
+      "cache": false
+    },
+    "test:unit": {
+      "dependsOn": ["build:api", "db:build"],
+      "inputs": ["**/*.test.ts", "**/*.test.tsx", "vitest.config.mts"],
+      "outputLogs": "new-only"
+    },
+    "test:db:push": {
+      "inputs": ["prisma/schema.prisma"],
+      "cache": false,
+      "outputLogs": "new-only"
+    },
+    "test:e2e": {
+      "dependsOn": ["build", "test:db:push", "test:install"],
+      "inputs": [
+        "**/*.e2e.ts",
+        "**/*.e2e.tsx",
+        "**/*.cy.ts",
+        "cypress.config.js"
+      ],
+      "outputLogs": "new-only"
+    },
+    "test": {
+      "dependsOn": ["test:unit", "test:e2e", "test:e2e"],
+      "outputLogs": "new-only"
+    },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "start": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "lint": {}
+  }
+}
