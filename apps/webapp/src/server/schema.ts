@@ -94,15 +94,28 @@ export const authenticators = pgTable(
   }),
 );
 
-export const devicesTable = pgTable("devices", {
-  id: serial("id").primaryKey(),
-  userId: text("user_id")
-    .references(() => usersTable.id)
-    .notNull(),
-  name: text("name").notNull(),
-  fcmToken: text("fcm_token").notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const devicesTable = pgTable(
+  "devices",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .references(() => usersTable.id)
+      .notNull(),
+    name: text("name").notNull(),
+    fcmToken: text("fcm_token").notNull().unique(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    deviceUserUnique: uniqueIndex("device_user_unique").on(
+      table.userId,
+      table.fcmToken,
+    ),
+    userNameUnique: uniqueIndex("user_name_unique").on(
+      table.userId,
+      table.name,
+    ),
+  }),
+);
 
 export const packagesTable = pgTable("packages", {
   id: serial("id").primaryKey(),
