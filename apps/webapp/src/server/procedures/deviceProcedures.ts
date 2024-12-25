@@ -1,6 +1,6 @@
 import { protectedProcedure } from "../trpc";
 import { z } from "zod";
-import { devices } from "../schema";
+import { devicesTable } from "../schema";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 
@@ -17,17 +17,28 @@ export const deviceProcedures = {
     .query(async ({ ctx }) => {
       return db
         .select({
-          id: devices.id,
-          name: devices.name,
-          createdAt: devices.createdAt,
+          id: devicesTable.id,
+          name: devicesTable.name,
+          createdAt: devicesTable.createdAt,
         })
-        .from(devices)
-        .where(eq(devices.userId, ctx.user.id));
+        .from(devicesTable)
+        .where(eq(devicesTable.userId, ctx.user.id));
     }),
 
   registerDevice: protectedProcedure
     .input(z.object({ name: z.string(), fcmToken: z.string() }))
+    .output(DeviceSchema)
     .mutation(async ({ input, ctx }) => {
-      return db.insert(devices).values({ ...input, userId: ctx.user.id });
+      const [device] = await db
+        .insert(devicesTable)
+        .values({ ...input, userId: ctx.user.id })
+        .returning({
+          id: devicesTable.id,
+          name: devicesTable.name,
+          createdAt: devicesTable.createdAt,
+        })
+        .execute();
+
+      return device;
     }),
 };
