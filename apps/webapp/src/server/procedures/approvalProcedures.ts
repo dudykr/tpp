@@ -11,6 +11,7 @@ import {
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
+
 const ApprovalRequestStatus = z.enum(["pending", "approved", "rejected"]);
 
 export const approvalProcedures = {
@@ -63,7 +64,7 @@ export const approvalProcedures = {
     }),
 
   addUserToApprovalGroup: protectedProcedure
-    .input(z.object({ groupId: z.number(), userId: z.number() }))
+    .input(z.object({ groupId: z.number(), userId: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const packageDetails = await db
         .select()
@@ -80,7 +81,7 @@ export const approvalProcedures = {
         .from(packageMembersTable)
         .where(
           and(
-            eq(packageMembersTable.packageId, packageDetails[0].packageId),
+            eq(packageMembersTable.packageId, packageDetails[0].packages.id),
             eq(packageMembersTable.userId, ctx.user.id),
           ),
         )
@@ -96,7 +97,7 @@ export const approvalProcedures = {
     }),
 
   removeUserFromApprovalGroup: protectedProcedure
-    .input(z.object({ groupId: z.number(), userId: z.number() }))
+    .input(z.object({ groupId: z.number(), userId: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const packageDetails = await db
         .select()
@@ -113,7 +114,7 @@ export const approvalProcedures = {
         .from(packageMembersTable)
         .where(
           and(
-            eq(packageMembersTable.packageId, packageDetails[0].packageId),
+            eq(packageMembersTable.packageId, packageDetails[0].packages.id),
             eq(packageMembersTable.userId, ctx.user.id),
           ),
         )
