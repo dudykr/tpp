@@ -2,40 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { trpc } from "@/utils/trpc";
+import { RegisterDeviceDialog } from "./register-device-dialog";
 
 export default function Devices() {
-  const [devices, setDevices] = useState([]);
-  const { data: fetchedDevices, isLoading } = trpc.getDevices.useQuery();
-  const registerDevice = trpc.registerDevice.useMutation();
-
-  useEffect(() => {
-    if (fetchedDevices) {
-      setDevices(fetchedDevices);
-    }
-  }, [fetchedDevices]);
-
-  const register = async () => {
-    try {
-      const newDevice = await registerDevice.mutateAsync({
-        name: "New Device",
-      });
-      setDevices([...devices, newDevice]);
-    } catch (error) {
-      console.error("Error registering device:", error);
-    }
-  };
-
-  if (isLoading) return <div>Loading...</div>;
+  const { data: devices } = trpc.getDevices.useQuery();
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Manage Devices</h1>
-      <button
-        onClick={register}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        Register New Device
-      </button>
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Registered Devices</h2>
         {devices.length === 0 ? (
@@ -50,6 +24,7 @@ export default function Devices() {
           </ul>
         )}
       </div>
+      <RegisterDeviceDialog />
     </div>
   );
 }
