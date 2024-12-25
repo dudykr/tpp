@@ -32,9 +32,12 @@ importers:
       '@auth/drizzle-adapter':
         specifier: ^1.7.4
         version: 1.7.4
+      '@trpc/client':
+        specifier: 11.0.0-rc.666
+        version: 11.0.0-rc.666(@trpc/server@11.0.0-rc.666(typescript@5.7.2))(typescript@5.7.2)
       '@trpc/server':
-        specifier: ^10.45.2
-        version: 10.45.2
+        specifier: 11.0.0-rc.666
+        version: 11.0.0-rc.666(typescript@5.7.2)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -400,8 +403,16 @@ packages:
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
-  '@trpc/server@10.45.2':
-    resolution: {integrity: sha512-wOrSThNNE4HUnuhJG6PfDRp4L2009KDVxsd+2VYH8ro6o/7/jwYZ8Uu5j+VaW+mOmc8EHerHzGcdbGNQSAUPgg==}
+  '@trpc/client@11.0.0-rc.666':
+    resolution: {integrity: sha512-BP3H0bktY03m7haVT5QoPR4sn30DNJcvFHsA3Msj3uPRY8JLVE03MR4rVG6T7VbcglORKpyMlRxjpUgdRmJErA==}
+    peerDependencies:
+      '@trpc/server': 11.0.0-rc.666+99556c074
+      typescript: '>=5.6.2'
+
+  '@trpc/server@11.0.0-rc.666':
+    resolution: {integrity: sha512-k+jKrdH/owDRRXPR7oPKCQRTu0dOEnqdGh56863ym95sFY8qXE7BhOR8S4WqyZw1CiPZGjRkdFN0q/GsJhKsIA==}
+    peerDependencies:
+      typescript: '>=5.6.2'
 
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
@@ -2587,7 +2598,14 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@trpc/server@10.45.2': {}
+  '@trpc/client@11.0.0-rc.666(@trpc/server@11.0.0-rc.666(typescript@5.7.2))(typescript@5.7.2)':
+    dependencies:
+      '@trpc/server': 11.0.0-rc.666(typescript@5.7.2)
+      typescript: 5.7.2
+
+  '@trpc/server@11.0.0-rc.666(typescript@5.7.2)':
+    dependencies:
+      typescript: 5.7.2
 
   '@types/estree@1.0.6': {}
 
