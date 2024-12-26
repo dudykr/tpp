@@ -10,12 +10,15 @@ import {
   approvalAuthenticators,
   usersTable,
 } from "../schema";
-import { eq, and, Simplify } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
-import { startAuthentication } from "@simplewebauthn/browser";
-import { generateAuthenticationOptions } from "@simplewebauthn/server";
-import { isoUint8Array } from "@simplewebauthn/server/helpers";
+import {
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse,
+} from "@simplewebauthn/server";
+import { isoBase64URL, isoUint8Array } from "@simplewebauthn/server/helpers";
+import { fromBase64URLString } from "./deviceProcedures";
 
 const ApprovalRequestStatus = z.enum(["pending", "approved", "rejected"]);
 
@@ -78,18 +81,19 @@ export const approvalProcedures = router({
         .from(approvalAuthenticators)
         .where(eq(approvalAuthenticators.userId, ctx.user.id));
 
-      if (authenticators.length === 0)
+      if (authenticators.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "WebAuthn is not configured for this account",
         });
+      }
 
       const options = await generateAuthenticationOptions({
         rpID: process.env.WEBAUTHN_RP_ID!,
         allowCredentials: authenticators.map((authenticator) => ({
-          id: authenticator.credentialID,
+          id: fromBase64URLString(authenticator.credentialID),
         })),
-        challenge: isoUint8Array.fromUTF8String(input.requestId.toString()),
+        challenge: `approval-request:${input.requestId.toString()}`,
         timeout: 60000,
         userVerification: "required",
       });
@@ -212,34 +216,115 @@ export const approvalProcedures = router({
     }),
 
   approveRequest: protectedProcedure
-    .input(z.object({ requestId: z.number() }))
+    .input(z.object({ requestId: z.number(), result: z.any() }))
     .mutation(async ({ input, ctx }) => {
+      const dbCredentialId = Buffer.from(input.result.id).toString("base64url");
+
+      const [authenticator] = await db
+        .select()
+        .from(approvalAuthenticators)
+        .where(
+          and(
+            eq(approvalAuthenticators.userId, ctx.user.id),
+            eq(approvalAuthenticators.credentialID, dbCredentialId),
+          ),
+        )
+        .limit(1);
+      if (!authenticator)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Authenticator not found",
+        });
+
+      const verificationResult = await verifyAuthenticationResponse({
+        response: input.result,
+        expectedChallenge: isoBase64URL.fromUTF8String(
+          `approval-request:${input.requestId.toString()}`,
+        ),
+        expectedOrigin: process.env.WEBAUTHN_ORIGIN!,
+        expectedRPID: process.env.WEBAUTHN_RP_ID!,
+        credential: {
+          id: fromBase64URLString(authenticator.credentialID),
+          publicKey: isoBase64URL.toBuffer(
+            authenticator.credentialPublicKey,
+            "base64url",
+          ),
+          counter: authenticator.counter,
+        },
+      }).catch((e) => {
+        console.error(e);
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Invalid authentication",
+        });
+      });
+
+      if (!verificationResult.verified) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Invalid authentication",
+        });
+      }
+
+      const [approvalGroup] = await db
+        .select({
+          id: approvalGroupsTable.id,
+        })
+        .from(approvalGroupsTable)
+        .innerJoin(
+          approvalGroupMembersTable,
+          eq(approvalGroupsTable.id, approvalGroupMembersTable.groupId),
+        )
+        .where(eq(approvalGroupMembersTable.userId, ctx.user.id))
+        .limit(1);
+
+      if (!approvalGroup) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Approval group not found",
+        });
+      }
+
       // Add the user's approval
       await db
         .insert(approvalsTable)
-        .values({ requestId: input.requestId, userId: ctx.user.id });
+        .values({
+          requestId: input.requestId,
+          groupId: approvalGroup.id,
+          userId: ctx.user.id,
+        })
+        .onConflictDoNothing();
 
       // Check if the request should be approved
-      const request = await db
+      const [request] = await db
         .select()
         .from(approvalRequestsTable)
         .where(eq(approvalRequestsTable.id, input.requestId))
         .limit(1);
 
+      if (!request) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Request not found",
+        });
+      }
+
       const approvalGroups = await db
         .select()
         .from(approvalGroupsTable)
-        .where(eq(approvalGroupsTable.packageId, request[0].packageId));
+        .where(eq(approvalGroupsTable.packageId, request.packageId));
 
+      //
       const approvedGroups = await db
-        .select()
-        .from(approvalsTable)
+        .select({ id: approvalGroupsTable.id })
+        .from(approvalGroupsTable)
         .innerJoin(
-          approvalGroupMembersTable,
-          eq(approvalsTable.userId, approvalGroupMembersTable.userId),
+          approvalsTable,
+          eq(approvalGroupsTable.id, approvalsTable.groupId),
         )
-        .where(eq(approvalsTable.requestId, input.requestId))
-        .groupBy(approvalGroupMembersTable.groupId);
+        .where(eq(approvalsTable.requestId, input.requestId));
+      console.log("approvedGroups", approvedGroups);
+      console.log("approvalGroups", approvalGroups);
 
       if (approvedGroups.length === approvalGroups.length) {
         // All groups have at least one approval, update the request status

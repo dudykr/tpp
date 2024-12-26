@@ -223,6 +223,9 @@ export const approvalsTable = pgTable(
     requestId: integer("request_id")
       .references(() => approvalRequestsTable.id)
       .notNull(),
+    groupId: integer("group_id")
+      .references(() => approvalGroupsTable.id, { onDelete: "cascade" })
+      .notNull(),
     userId: text("user_id")
       .references(() => usersTable.id)
       .notNull(),

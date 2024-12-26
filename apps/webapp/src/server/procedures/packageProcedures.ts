@@ -33,9 +33,7 @@ try {
     credential: cert(googleCredentials),
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
   });
-} catch (e) {
-  console.error(e);
-}
+} catch (e) {}
 
 export const packageProcedures = router({
   getPackages: protectedProcedure
@@ -82,14 +80,26 @@ export const packageProcedures = router({
   createPackage: protectedProcedure
     .input(z.object({ name: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const newPackage = await db
+      const [newPackage] = await db
         .insert(packagesTable)
         .values({ ...input, ownerId: ctx.user.id })
         .returning();
       await db
         .insert(packageMembersTable)
-        .values({ packageId: newPackage[0].id, userId: ctx.user.id });
-      return newPackage[0];
+        .values({ packageId: newPackage.id, userId: ctx.user.id });
+
+      const [approvalGroup] = await db
+        .insert(approvalGroupsTable)
+        .values({
+          packageId: newPackage.id,
+          name: "(Default)",
+        })
+        .returning();
+      await db
+        .insert(approvalGroupMembersTable)
+        .values({ groupId: approvalGroup.id, userId: ctx.user.id });
+
+      return newPackage;
     }),
 
   getPackageMembers: protectedProcedure
@@ -219,20 +229,11 @@ export const packageProcedures = router({
         },
         webpush: {
           fcmOptions: {
-            link: `https://tpp.dudy.dev/app/packages/${input.packageId}/requests/${request.id}`,
+            link: `${process.env.NEXTAUTH_URL}/app/packages/${input.packageId}/requests/${request.id}`,
           },
         },
         tokens: devices.map((device) => device.fcmToken),
       };
-
-      try {
-        await initializeApp({
-          credential: googleCredentials,
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-        });
-      } catch (e) {
-        console.error(e);
-      }
 
       const pushResults = await getMessaging().sendEachForMulticast(message);
       console.log("pushResults", pushResults);
