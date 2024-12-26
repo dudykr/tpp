@@ -29,8 +29,6 @@ export default function ApprovalRequestDetails(props: Props) {
       });
       const result = await startAuthentication({
         optionsJSON: options,
-        useBrowserAutofill: true,
-        verifyBrowserAutofillInput: true,
       });
       console.log("result", result);
       alert("Approval submitted successfully!");

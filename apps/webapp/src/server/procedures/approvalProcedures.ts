@@ -16,6 +16,7 @@ import { db } from "../db";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { generateAuthenticationOptions } from "@simplewebauthn/server";
 import { isoUint8Array } from "@simplewebauthn/server/helpers";
+import { fromBase64URLString } from "./deviceProcedures";
 
 const ApprovalRequestStatus = z.enum(["pending", "approved", "rejected"]);
 
@@ -78,16 +79,17 @@ export const approvalProcedures = router({
         .from(approvalAuthenticators)
         .where(eq(approvalAuthenticators.userId, ctx.user.id));
 
-      if (authenticators.length === 0)
+      if (authenticators.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "WebAuthn is not configured for this account",
         });
+      }
 
       const options = await generateAuthenticationOptions({
         rpID: process.env.WEBAUTHN_RP_ID!,
         allowCredentials: authenticators.map((authenticator) => ({
-          id: authenticator.credentialID,
+          id: fromBase64URLString(authenticator.credentialID),
         })),
         challenge: isoUint8Array.fromUTF8String(input.requestId.toString()),
         timeout: 60000,
