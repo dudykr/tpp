@@ -269,7 +269,8 @@ export const approvalProcedures = router({
       // Add the user's approval
       await db
         .insert(approvalsTable)
-        .values({ requestId: input.requestId, userId: ctx.user.id });
+        .values({ requestId: input.requestId, userId: ctx.user.id })
+        .onConflictDoNothing();
 
       // Check if the request should be approved
       const [request] = await db
@@ -297,9 +298,7 @@ export const approvalProcedures = router({
           approvalGroupMembersTable,
           eq(approvalsTable.userId, approvalGroupMembersTable.userId),
         )
-        .where(eq(approvalsTable.requestId, input.requestId))
-        .groupBy(approvalGroupMembersTable.groupId);
-
+        .where(eq(approvalsTable.requestId, input.requestId));
       console.log("approvedGroups", approvedGroups);
       console.log("approvalGroups", approvalGroups);
 
