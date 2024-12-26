@@ -120,7 +120,7 @@ export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
             <div className="text-center">
               <p className="text-sm text-gray-600 mb-2">
                 Please complete the WebAuthn registration by following your
-                browser's prompts.
+                browser&apos;s prompts.
               </p>
               {generateWebAuthnOptions.isPending && (
                 <p>Preparing WebAuthn registration...</p>
