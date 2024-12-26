@@ -1,3 +1,4 @@
+import { isoUint8Array } from "@simplewebauthn/server/helpers";
 import { protectedProcedure, router } from "../trpc";
 import { z } from "zod";
 import { approvalAuthenticators, devicesTable } from "../schema";
@@ -57,7 +58,7 @@ export const deviceProcedures = router({
       const options = await generateRegistrationOptions({
         rpName: "Dudy TPP",
         rpID: process.env.WEBAUTHN_RP_ID!,
-        userID: ctx.user.id,
+        userID: isoUint8Array.fromUTF8String(ctx.user.id),
         userName: ctx.user.email!,
         attestationType: "none",
       });
@@ -82,16 +83,16 @@ export const deviceProcedures = router({
       });
 
       if (verification.verified) {
-        const { credentialID, credentialPublicKey, counter } =
-          verification.registrationInfo!;
+        const { credential } = verification.registrationInfo!;
 
         await db.insert(approvalAuthenticators).values({
-          credentialID: Buffer.from(credentialID).toString("base64url"),
+          credentialID: Buffer.from(credential.id).toString("base64url"),
           userId: ctx.user.id,
           providerAccountId: ctx.user.id,
-          credentialPublicKey:
-            Buffer.from(credentialPublicKey).toString("base64url"),
-          counter,
+          credentialPublicKey: Buffer.from(credential.publicKey).toString(
+            "base64url",
+          ),
+          counter: credential.counter,
           credentialDeviceType:
             verification.registrationInfo!.credentialDeviceType,
           credentialBackedUp: verification.registrationInfo!.credentialBackedUp,
