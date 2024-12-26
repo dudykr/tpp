@@ -1,4 +1,5 @@
 import { protectedProcedure, router } from "../trpc";
+import { getMessaging } from "firebase-admin/messaging";
 import { z } from "zod";
 import {
   packagesTable,
@@ -141,7 +142,7 @@ export const packageProcedures = router({
   startPublishing: protectedProcedure
     .input(z.object({ packageId: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      const [request] = db
+      const [request] = await db
         .insert(approvalRequestsTable)
         .values({
           packageId: input.packageId,
@@ -158,7 +159,9 @@ export const packageProcedures = router({
       }
 
       const sqGroups = db
-        .select()
+        .select({
+          id: approvalGroupsTable.id,
+        })
         .from(approvalGroupsTable)
         .where(eq(approvalGroupsTable.packageId, input.packageId))
         .as("sqGroups");
@@ -178,5 +181,12 @@ export const packageProcedures = router({
         .where(eq(devicesTable.userId, sqUsers.id));
 
       // Send push to all members in the approval group for this package.
+
+      const message = {
+        data: { score: "850", time: "2:45" },
+        tokens: devices.map((device) => device.fcmToken),
+      };
+
+      await getMessaging().sendEachForMulticast(message);
     }),
 });
