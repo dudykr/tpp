@@ -14,7 +14,10 @@ import { eq, and, Simplify } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
 import { startAuthentication } from "@simplewebauthn/browser";
-import { generateAuthenticationOptions } from "@simplewebauthn/server";
+import {
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse,
+} from "@simplewebauthn/server";
 import { isoUint8Array } from "@simplewebauthn/server/helpers";
 import { fromBase64URLString } from "./deviceProcedures";
 
@@ -214,8 +217,45 @@ export const approvalProcedures = router({
     }),
 
   approveRequest: protectedProcedure
-    .input(z.object({ requestId: z.number() }))
+    .input(z.object({ requestId: z.number(), result: z.any() }))
     .mutation(async ({ input, ctx }) => {
+      const dbCredentialId = Buffer.from(input.result.id).toString("base64url");
+
+      const [authenticator] = await db
+        .select()
+        .from(approvalAuthenticators)
+        .where(
+          and(
+            eq(approvalAuthenticators.userId, ctx.user.id),
+            eq(approvalAuthenticators.credentialID, dbCredentialId),
+          ),
+        )
+        .limit(1);
+      if (!authenticator)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Authenticator not found",
+        });
+
+      const verificationResult = await verifyAuthenticationResponse({
+        response: input.result,
+        expectedChallenge: input.requestId.toString(),
+        expectedOrigin: process.env.WEBAUTHN_ORIGIN!,
+        expectedRPID: process.env.WEBAUTHN_RP_ID!,
+        credential: {
+          id: fromBase64URLString(authenticator.credentialID),
+          publicKey: fromBase64URLString(authenticator.credentialPublicKey),
+          counter: authenticator.counter,
+        },
+        requireUserVerification: true,
+      });
+
+      if (!verificationResult.verified)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Invalid authentication",
+        });
+
       // Add the user's approval
       await db
         .insert(approvalsTable)

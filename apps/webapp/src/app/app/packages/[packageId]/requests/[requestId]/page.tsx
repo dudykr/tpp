@@ -20,6 +20,7 @@ export default function ApprovalRequestDetails(props: Props) {
     packageId: parseInt(params.packageId),
   });
   const startApproval = trpc.approvals.startApprovalProcess.useMutation();
+  const approveRequest = trpc.approvals.approveRequest.useMutation();
 
   const handleApprove = async () => {
     setIsApproving(true);
@@ -32,6 +33,11 @@ export default function ApprovalRequestDetails(props: Props) {
       });
       console.log("result", result);
       alert("Approval submitted successfully!");
+
+      await approveRequest.mutateAsync({
+        requestId: parseInt(params.requestId),
+        result,
+      });
       void refetch();
     } catch (error) {
       console.error("Error submitting approval:", error);
