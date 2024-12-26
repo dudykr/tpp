@@ -107,6 +107,9 @@ export const approvalAuthenticators = pgTable(
     credentialDeviceType: text("credentialDeviceType").notNull(),
     credentialBackedUp: boolean("credentialBackedUp").notNull(),
     transports: text("transports"),
+    deviceId: integer("device_id")
+      .references(() => devicesTable.id)
+      .notNull(),
   },
   (authenticator) => ({
     compositePK: primaryKey({
