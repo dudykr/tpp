@@ -8,7 +8,7 @@ import { ApiOutput, AppRouter } from "@/server/router";
 type Device = ApiOutput["getDevices"][number];
 
 export default function Devices() {
-  const { data } = trpc.getDevices.useQuery();
+  const [data, query] = trpc.getDevices.useSuspenseQuery();
   const devices = data as Device[] | undefined;
 
   return (
@@ -28,7 +28,7 @@ export default function Devices() {
           </ul>
         )}
       </div>
-      <RegisterDeviceDialog />
+      <RegisterDeviceDialog onAdd={query.refetch} />
     </div>
   );
 }

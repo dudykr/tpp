@@ -15,7 +15,7 @@ import "@/lib/firebase";
 import { getMessaging, getToken } from "firebase/messaging";
 import { getAuth, signInAnonymously } from "firebase/auth";
 
-export function RegisterDeviceDialog() {
+export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
   const [open, setOpen] = useState(false);
   const [deviceName, setDeviceName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +24,7 @@ export function RegisterDeviceDialog() {
     onSuccess: () => {
       setOpen(false);
       setDeviceName("");
+      onAdd();
     },
   });
 
