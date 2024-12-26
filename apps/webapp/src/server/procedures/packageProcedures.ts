@@ -231,7 +231,7 @@ export const packageProcedures = router({
         },
         webpush: {
           fcmOptions: {
-            link: `https://tpp.dudy.dev/app/packages/${input.packageId}/requests/${request.id}`,
+            link: `${process.env.NEXTAUTH_URL}/app/packages/${input.packageId}/requests/${request.id}`,
           },
         },
         tokens: devices.map((device) => device.fcmToken),
