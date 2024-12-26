@@ -33,9 +33,7 @@ try {
     credential: cert(googleCredentials),
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
   });
-} catch (e) {
-  console.error(e);
-}
+} catch (e) {}
 
 export const packageProcedures = router({
   getPackages: protectedProcedure
@@ -236,15 +234,6 @@ export const packageProcedures = router({
         },
         tokens: devices.map((device) => device.fcmToken),
       };
-
-      try {
-        await initializeApp({
-          credential: googleCredentials,
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-        });
-      } catch (e) {
-        console.error(e);
-      }
 
       const pushResults = await getMessaging().sendEachForMulticast(message);
       console.log("pushResults", pushResults);
