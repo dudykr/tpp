@@ -20,7 +20,7 @@ export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
   const [deviceName, setDeviceName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const registerDevice = trpc.registerDevice.useMutation({
+  const registerDevice = trpc.devices.registerDevice.useMutation({
     onSuccess: () => {
       setOpen(false);
       setDeviceName("");

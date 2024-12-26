@@ -11,9 +11,10 @@ type Props = {
 export default function ApprovalRequests(props: Props) {
   const params = use(props.params);
 
-  const { data: requests, isLoading } = trpc.getApprovalRequests.useQuery({
-    packageId: parseInt(params.packageId),
-  });
+  const { data: requests, isLoading } =
+    trpc.approvals.getApprovalRequests.useQuery({
+      packageId: parseInt(params.packageId),
+    });
 
   if (isLoading) return <div>Loading...</div>;
 

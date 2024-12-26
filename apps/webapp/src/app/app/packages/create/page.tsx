@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 export default function CreatePackage() {
   const [packageName, setPackageName] = useState("");
-  const createPackageMutation = trpc.createPackage.useMutation();
+  const createPackageMutation = trpc.packages.createPackage.useMutation();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {

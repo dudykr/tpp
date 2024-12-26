@@ -1,14 +1,24 @@
-import { protectedProcedure } from "../trpc";
+import { protectedProcedure, router } from "../trpc";
 import { z } from "zod";
 import { packagesTable, packageMembersTable, usersTable } from "../schema";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
 
-export const packageProcedures = {
-  getPackages: protectedProcedure.query(async ({ ctx }) => {
-    return db.select().from(packagesTable);
-  }),
+const PackageZodSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  createdAt: z.date(),
+  ownerId: z.string(),
+});
+
+export const packageProcedures = router({
+  getPackages: protectedProcedure
+    .input(z.void())
+    .output(z.array(PackageZodSchema))
+    .query(async ({ ctx }) => {
+      return db.select().from(packagesTable);
+    }),
 
   getPackageDetails: protectedProcedure
     .input(z.object({ packageId: z.number() }))
@@ -110,4 +120,4 @@ export const packageProcedures = {
 
       return { success: true };
     }),
-};
+});

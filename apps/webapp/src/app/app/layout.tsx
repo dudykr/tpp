@@ -1,6 +1,7 @@
 import { AuthRequired } from "@/components/auth-required";
 import { authOptions } from "@/lib/server/auth-options";
 import { getServerSession } from "next-auth/next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function AppLayout({
@@ -21,7 +22,9 @@ export default async function AppLayout({
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold">Dudy TPP</span>
+                <Link href={`/app`}>
+                  <span className="text-xl font-bold">Dudy TPP</span>
+                </Link>
               </div>
             </div>
             <div className="flex items-center">

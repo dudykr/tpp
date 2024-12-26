@@ -12,17 +12,17 @@ type Props = {
 export default function PackageApprovalConfig(props: Props) {
   const params = use(props.params);
   const [newGroupName, setNewGroupName] = useState("");
-  const { data: packageDetails } = trpc.getPackageDetails.useQuery({
+  const { data: packageDetails } = trpc.packages.getPackageDetails.useQuery({
     packageId: parseInt(params.packageId),
   });
   const {
     data: approvalGroups,
     isLoading,
     refetch,
-  } = trpc.getPackageApprovalGroups.useQuery({
+  } = trpc.approvals.getPackageApprovalGroups.useQuery({
     packageId: parseInt(params.packageId),
   });
-  const createGroupMutation = trpc.createApprovalGroup.useMutation();
+  const createGroupMutation = trpc.approvals.createApprovalGroup.useMutation();
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
