@@ -70,16 +70,16 @@ export default function PackageMembers(props: Props) {
         <ul className="space-y-2 mb-4">
           {members?.map((member) => (
             <li
-              key={member.id}
+              key={member.userId}
               className="flex justify-between items-center bg-gray-50 p-3 rounded-md"
             >
               <span>
                 {member.name} ({member.email})
               </span>
               {packageDetails.isOwner &&
-                packageDetails.ownerId !== member.id && (
+                packageDetails.ownerId !== member.userId && (
                   <button
-                    onClick={() => handleRemoveMember(member.id)}
+                    onClick={() => handleRemoveMember(member.userId)}
                     className="text-red-500 hover:text-red-700"
                   >
                     Remove

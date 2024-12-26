@@ -20,9 +20,9 @@ type GroupMember = {
 };
 
 type PackageMember = {
-  id: number;
   userId: string;
   name: string | null;
+  email: string | null;
 };
 
 export default function PackageApprovalConfig(props: Props) {
