@@ -30,6 +30,19 @@ export const deviceProcedures = router({
         .where(eq(devicesTable.userId, ctx.user.id));
     }),
 
+  unregisterDevice: protectedProcedure
+    .input(z.object({ deviceId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      await db
+        .delete(devicesTable)
+        .where(
+          and(
+            eq(devicesTable.id, input.deviceId),
+            eq(devicesTable.userId, ctx.user.id),
+          ),
+        );
+    }),
+
   registerDevice: protectedProcedure
     .input(z.object({ name: z.string(), fcmToken: z.string() }))
     .output(DeviceZodSchema)

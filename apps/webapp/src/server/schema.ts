@@ -107,7 +107,7 @@ export const approvalAuthenticators = pgTable(
     credentialBackedUp: boolean("credentialBackedUp").notNull(),
     transports: text("transports"),
     deviceId: integer("device_id")
-      .references(() => devicesTable.id)
+      .references(() => devicesTable.id, { onDelete: "cascade" })
       .notNull(),
   },
   (authenticator) => ({

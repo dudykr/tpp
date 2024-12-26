@@ -10,6 +10,12 @@ type Device = ApiOutput["devices"]["getDevices"][number];
 export default function Devices() {
   const [data, query] = trpc.devices.getDevices.useSuspenseQuery();
   const devices = data as Device[];
+  const utils = trpc.useUtils();
+  const unregisterMutation = trpc.devices.unregisterDevice.useMutation({
+    onSuccess: () => {
+      utils.devices.getDevices.invalidate();
+    },
+  });
 
   return (
     <div className="space-y-6">
@@ -21,8 +27,19 @@ export default function Devices() {
         ) : (
           <ul className="space-y-2">
             {devices.map((device, index) => (
-              <li key={index} className="bg-gray-50 p-3 rounded-md">
-                {device.name}
+              <li
+                key={index}
+                className="bg-gray-50 p-3 rounded-md flex justify-between items-center"
+              >
+                <span>{device.name}</span>
+                <button
+                  onClick={() =>
+                    unregisterMutation.mutate({ deviceId: device.id })
+                  }
+                  className="text-red-600 hover:text-red-800"
+                >
+                  Unregister
+                </button>
               </li>
             ))}
           </ul>
