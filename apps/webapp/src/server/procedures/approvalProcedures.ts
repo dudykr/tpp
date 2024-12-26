@@ -266,10 +266,33 @@ export const approvalProcedures = router({
         });
       }
 
+      const [approvalGroup] = await db
+        .select({
+          id: approvalGroupsTable.id,
+        })
+        .from(approvalGroupsTable)
+        .innerJoin(
+          approvalGroupMembersTable,
+          eq(approvalGroupsTable.id, approvalGroupMembersTable.groupId),
+        )
+        .where(eq(approvalGroupMembersTable.userId, ctx.user.id))
+        .limit(1);
+
+      if (!approvalGroup) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Approval group not found",
+        });
+      }
+
       // Add the user's approval
       await db
         .insert(approvalsTable)
-        .values({ requestId: input.requestId, userId: ctx.user.id })
+        .values({
+          requestId: input.requestId,
+          groupId: approvalGroup.id,
+          userId: ctx.user.id,
+        })
         .onConflictDoNothing();
 
       // Check if the request should be approved
@@ -291,12 +314,13 @@ export const approvalProcedures = router({
         .from(approvalGroupsTable)
         .where(eq(approvalGroupsTable.packageId, request.packageId));
 
+      //
       const approvedGroups = await db
-        .select()
-        .from(approvalsTable)
+        .select({ id: approvalGroupsTable.id })
+        .from(approvalGroupsTable)
         .innerJoin(
-          approvalGroupMembersTable,
-          eq(approvalsTable.userId, approvalGroupMembersTable.userId),
+          approvalsTable,
+          eq(approvalGroupsTable.id, approvalsTable.groupId),
         )
         .where(eq(approvalsTable.requestId, input.requestId));
       console.log("approvedGroups", approvedGroups);
