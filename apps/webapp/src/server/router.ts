@@ -5,9 +5,9 @@ import { approvalProcedures } from "./procedures/approvalProcedures";
 import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
 export const appRouter = router({
-  ...deviceProcedures,
-  ...packageProcedures,
-  ...approvalProcedures,
+  devices: deviceProcedures,
+  packages: packageProcedures,
+  approvals: approvalProcedures,
 });
 
 export type AppRouter = typeof appRouter;
