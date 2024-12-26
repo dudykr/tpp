@@ -1,6 +1,11 @@
 import { protectedProcedure, router } from "../trpc";
 import { z } from "zod";
-import { packagesTable, packageMembersTable, usersTable } from "../schema";
+import {
+  packagesTable,
+  packageMembersTable,
+  usersTable,
+  approvalRequestsTable,
+} from "../schema";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
@@ -128,5 +133,15 @@ export const packageProcedures = router({
         );
 
       return { success: true };
+    }),
+
+  startPublishing: protectedProcedure
+    .input(z.object({ packageId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      return db.insert(approvalRequestsTable).values({
+        packageId: input.packageId,
+        title: `Publish package at ${new Date().toISOString()}`,
+        status: "pending",
+      });
     }),
 });
