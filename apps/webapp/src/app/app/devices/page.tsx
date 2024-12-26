@@ -31,7 +31,18 @@ export default function Devices() {
                 key={index}
                 className="bg-gray-50 p-3 rounded-md flex justify-between items-center"
               >
-                <span>{device.name}</span>
+                <div className="flex items-center gap-2">
+                  <span>{device.name}</span>
+                  {device.isWebAuthnRegistered ? (
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                      WebAuthn Registered
+                    </span>
+                  ) : (
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                      WebAuthn Not Registered
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={() =>
                     unregisterMutation.mutate({ deviceId: device.id })
