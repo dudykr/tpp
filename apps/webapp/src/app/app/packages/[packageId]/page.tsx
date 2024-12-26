@@ -12,7 +12,11 @@ type Props = {
 export default function PackageDetails(props: Props) {
   const params = use(props.params);
 
-  const startPublishing = trpc.packages.startPublishing.useMutation();
+  const startPublishing = trpc.packages.startPublishing.useMutation({
+    onSuccess: () => {
+      alert("Publishing started");
+    },
+  });
 
   const { data: packageDetails, isLoading } =
     trpc.packages.getPackageDetails.useQuery({
