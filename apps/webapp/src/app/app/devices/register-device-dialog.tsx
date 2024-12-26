@@ -13,6 +13,7 @@ import { useState } from "react";
 import { trpc } from "@/utils/trpc";
 import "@/lib/firebase";
 import { getMessaging, getToken } from "firebase/messaging";
+import { getAuth, signInAnonymously } from "firebase/auth";
 
 export function RegisterDeviceDialog() {
   const [open, setOpen] = useState(false);
@@ -29,6 +30,12 @@ export function RegisterDeviceDialog() {
   const handleRegister = async () => {
     try {
       setIsLoading(true);
+
+      const auth = getAuth();
+      if (!auth.currentUser) {
+        await signInAnonymously(auth);
+      }
+
       const messaging = getMessaging();
       const fcmToken = await getToken(messaging, {
         vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
