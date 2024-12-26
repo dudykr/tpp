@@ -18,13 +18,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <NoSSR>
-        <SessionProvider>
-          <TrpcProvider>
-            <body>{children}</body>
-          </TrpcProvider>
-        </SessionProvider>
-      </NoSSR>
+      <SessionProvider>
+        <TrpcProvider>
+          <body>
+            <NoSSR>{children}</NoSSR>
+          </body>
+        </TrpcProvider>
+      </SessionProvider>
     </html>
   );
 }
