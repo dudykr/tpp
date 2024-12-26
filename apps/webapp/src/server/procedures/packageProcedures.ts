@@ -69,10 +69,19 @@ export const packageProcedures = router({
 
   getPackageMembers: protectedProcedure
     .input(z.object({ packageId: z.number() }))
+    .output(
+      z.array(
+        z.object({
+          userId: z.string(),
+          name: z.string().nullable(),
+          email: z.string().email().nullable(),
+        }),
+      ),
+    )
     .query(async ({ input, ctx }) => {
       const members = await db
         .select({
-          id: usersTable.id,
+          userId: usersTable.id,
           name: usersTable.name,
           email: usersTable.email,
         })

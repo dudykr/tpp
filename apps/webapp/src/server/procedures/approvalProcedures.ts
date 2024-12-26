@@ -8,6 +8,7 @@ import {
   packagesTable,
   packageMembersTable,
   approvalAuthenticators,
+  usersTable,
 } from "../schema";
 import { eq, and, Simplify } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -258,5 +259,23 @@ export const approvalProcedures = router({
         ...input,
         status: "pending",
       });
+    }),
+
+  getGroupMembers: protectedProcedure
+    .input(z.object({ groupId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const groupMembers = await db
+        .select({
+          userId: approvalGroupMembersTable.userId,
+          name: usersTable.name,
+        })
+        .from(approvalGroupMembersTable)
+        .innerJoin(
+          usersTable,
+          eq(approvalGroupMembersTable.userId, usersTable.id),
+        )
+        .where(eq(approvalGroupMembersTable.groupId, input.groupId));
+
+      return groupMembers;
     }),
 });
