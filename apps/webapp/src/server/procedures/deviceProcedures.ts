@@ -37,7 +37,12 @@ export const deviceProcedures = {
           name: devicesTable.name,
           createdAt: devicesTable.createdAt,
         })
-        .execute();
+        .onConflictDoUpdate({
+          target: [devicesTable.id],
+          set: {
+            name: input.name,
+          },
+        });
 
       return device;
     }),
