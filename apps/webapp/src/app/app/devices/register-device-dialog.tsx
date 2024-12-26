@@ -46,7 +46,10 @@ export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
   const handleWebAuthnRegistration = async (deviceId: number) => {
     try {
       const options = await generateWebAuthnOptions.mutateAsync({ deviceId });
-      const registrationResponse = await startRegistration(options);
+      const registrationResponse = await startRegistration({
+        optionsJSON: options,
+        useAutoRegister: true,
+      });
 
       await verifyWebAuthnRegistration.mutateAsync({
         deviceId,
@@ -55,6 +58,7 @@ export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
       });
     } catch (error) {
       console.error("Error registering WebAuthn:", error);
+      setIsLoading(false);
     }
   };
 

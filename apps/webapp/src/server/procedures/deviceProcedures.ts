@@ -54,13 +54,27 @@ export const deviceProcedures = router({
 
   generateWebAuthnRegistrationOptions: protectedProcedure
     .input(z.object({ deviceId: z.number() }))
+    .output(z.any())
     .mutation(async ({ input, ctx }) => {
+      const existingCredentials = await db
+        .select()
+        .from(approvalAuthenticators)
+        .where(
+          and(
+            eq(approvalAuthenticators.userId, ctx.user.id),
+            eq(approvalAuthenticators.deviceId, input.deviceId),
+          ),
+        );
+
       const options = await generateRegistrationOptions({
         rpName: "Dudy TPP",
         rpID: process.env.WEBAUTHN_RP_ID!,
         userID: isoUint8Array.fromUTF8String(ctx.user.id),
         userName: ctx.user.email!,
         attestationType: "none",
+        excludeCredentials: existingCredentials.map((credential) => ({
+          id: credential.credentialID,
+        })),
       });
 
       return options;
@@ -74,6 +88,7 @@ export const deviceProcedures = router({
         challenge: z.string(),
       }),
     )
+    .output(z.object({ verified: z.boolean() }))
     .mutation(async ({ input, ctx }) => {
       const verification = await verifyRegistrationResponse({
         response: input.registrationResponse,
@@ -97,6 +112,8 @@ export const deviceProcedures = router({
             verification.registrationInfo!.credentialDeviceType,
           credentialBackedUp: verification.registrationInfo!.credentialBackedUp,
           transports: input.registrationResponse.response.transports?.join(","),
+
+          deviceId: input.deviceId,
         });
 
         return { verified: true };
