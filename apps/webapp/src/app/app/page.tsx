@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { withAuth } from "@/components/withAuth";
 
-function Dashboard() {
+export default function Dashboard() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -28,5 +27,3 @@ function Dashboard() {
     </div>
   );
 }
-
-export default withAuth(Dashboard);

@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
+import { use } from "react";
 
-function ApprovalRequestDetails({
-  params,
-}: {
-  params: { packageId: string; requestId: string };
-}) {
+type Props = {
+  params: Promise<{ packageId: string; requestId: string }>;
+};
+
+export default function ApprovalRequestDetails(props: Props) {
+  const params = use(props.params);
   const [isApproving, setIsApproving] = useState(false);
   const {
     data: requestDetails,
@@ -27,7 +28,7 @@ function ApprovalRequestDetails({
       });
       // Implement WebAuthn verification here
       alert("Approval submitted successfully!");
-      refetch();
+      void refetch();
     } catch (error) {
       console.error("Error submitting approval:", error);
       alert("Failed to submit approval. Please try again.");
@@ -70,5 +71,3 @@ function ApprovalRequestDetails({
     </div>
   );
 }
-
-export default withAuth(ApprovalRequestDetails);

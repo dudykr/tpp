@@ -1,3 +1,4 @@
+import { AuthRequired } from "@/components/auth-required";
 import { authOptions } from "@/lib/server/auth-options";
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
@@ -31,7 +32,11 @@ export default async function AppLayout({
           </div>
         </div>
       </nav>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">{children}</main>
+      <AuthRequired>
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          {children}
+        </main>
+      </AuthRequired>
     </div>
   );
 }

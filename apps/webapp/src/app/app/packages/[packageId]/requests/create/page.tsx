@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
+
 import { useRouter } from "next/navigation";
 
-function CreateApprovalRequest({ params }: { params: { packageId: string } }) {
+type Props = {
+  params: Promise<{ packageId: string }>;
+};
+
+export default function CreateApprovalRequest(props: Props) {
+  const params = use(props.params);
   const [title, setTitle] = useState("");
   const createRequestMutation = trpc.createApprovalRequest.useMutation();
   const router = useRouter();
@@ -56,5 +61,3 @@ function CreateApprovalRequest({ params }: { params: { packageId: string } }) {
     </div>
   );
 }
-
-export default withAuth(CreateApprovalRequest);

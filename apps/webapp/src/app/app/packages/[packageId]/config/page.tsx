@@ -2,7 +2,6 @@
 
 import { use, useState } from "react";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
 
 type Props = {
   params: Promise<{
@@ -10,7 +9,7 @@ type Props = {
   }>;
 };
 
-function PackageApprovalConfig(props: Props) {
+export default function PackageApprovalConfig(props: Props) {
   const params = use(props.params);
   const [newGroupName, setNewGroupName] = useState("");
   const { data: packageDetails } = trpc.getPackageDetails.useQuery({
@@ -34,7 +33,7 @@ function PackageApprovalConfig(props: Props) {
           name: newGroupName.trim(),
         });
         setNewGroupName("");
-        refetch();
+        void refetch();
       } catch (error) {
         console.error("Error creating group:", error);
         alert("Failed to create group. Please try again.");
@@ -87,5 +86,3 @@ function PackageApprovalConfig(props: Props) {
     </div>
   );
 }
-
-export default withAuth(PackageApprovalConfig);

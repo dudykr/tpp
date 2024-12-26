@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
 
-function PackageMembers({ params }: { params: { packageId: string } }) {
+type Props = {
+  params: Promise<{ packageId: string }>;
+};
+
+export default function PackageMembers(props: Props) {
+  const params = use(props.params);
+
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const { data: packageDetails } = trpc.getPackageDetails.useQuery({
     packageId: parseInt(params.packageId),
@@ -28,7 +33,7 @@ function PackageMembers({ params }: { params: { packageId: string } }) {
           email: newMemberEmail.trim(),
         });
         setNewMemberEmail("");
-        refetch();
+        void refetch();
       } catch (error) {
         console.error("Error adding member:", error);
         alert("Failed to add member. Please try again.");
@@ -36,13 +41,13 @@ function PackageMembers({ params }: { params: { packageId: string } }) {
     }
   };
 
-  const handleRemoveMember = async (userId: number) => {
+  const handleRemoveMember = async (userId: string) => {
     try {
       await removeMemberMutation.mutateAsync({
         packageId: parseInt(params.packageId),
         userId,
       });
-      refetch();
+      void refetch();
     } catch (error) {
       console.error("Error removing member:", error);
       alert("Failed to remove member. Please try again.");
@@ -104,5 +109,3 @@ function PackageMembers({ params }: { params: { packageId: string } }) {
     </div>
   );
 }
-
-export default withAuth(PackageMembers);

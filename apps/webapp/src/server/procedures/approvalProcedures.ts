@@ -1,15 +1,16 @@
 import { protectedProcedure } from "../trpc";
 import { z } from "zod";
 import {
-  approvalGroups,
-  approvalGroupMembers,
-  approvalRequests,
-  approvals,
-  packages,
-  packageMembers,
+  approvalRequestsTable,
+  approvalGroupsTable,
+  approvalGroupMembersTable,
+  approvalsTable,
+  packagesTable,
+  packageMembersTable,
 } from "../schema";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { db } from "../db";
 
 const ApprovalRequestStatus = z.enum(["pending", "approved", "rejected"]);
 
@@ -17,37 +18,37 @@ export const approvalProcedures = {
   getApprovalRequests: protectedProcedure
     .input(z.object({ packageId: z.number() }))
     .query(async ({ input, ctx }) => {
-      return ctx.db
+      return db
         .select()
-        .from(approvalRequests)
-        .where(eq(approvalRequests.packageId, input.packageId));
+        .from(approvalRequestsTable)
+        .where(eq(approvalRequestsTable.packageId, input.packageId));
     }),
 
   getPackageApprovalGroups: protectedProcedure
     .input(z.object({ packageId: z.number() }))
     .query(async ({ input, ctx }) => {
-      return ctx.db
+      return db
         .select()
-        .from(approvalGroups)
-        .where(eq(approvalGroups.packageId, input.packageId));
+        .from(approvalGroupsTable)
+        .where(eq(approvalGroupsTable.packageId, input.packageId));
     }),
 
   createApprovalGroup: protectedProcedure
     .input(z.object({ packageId: z.number(), name: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const packageDetails = await ctx.db
+      const packageDetails = await db
         .select()
-        .from(packages)
-        .where(eq(packages.id, input.packageId))
+        .from(packagesTable)
+        .where(eq(packagesTable.id, input.packageId))
         .limit(1);
 
-      const isMember = await ctx.db
+      const isMember = await db
         .select()
-        .from(packageMembers)
+        .from(packageMembersTable)
         .where(
           and(
-            eq(packageMembers.packageId, input.packageId),
-            eq(packageMembers.userId, ctx.user.id),
+            eq(packageMembersTable.packageId, input.packageId),
+            eq(packageMembersTable.userId, ctx.user.id),
           ),
         )
         .limit(1);
@@ -59,26 +60,29 @@ export const approvalProcedures = {
         });
       }
 
-      return ctx.db.insert(approvalGroups).values(input);
+      return db.insert(approvalGroupsTable).values(input);
     }),
 
   addUserToApprovalGroup: protectedProcedure
-    .input(z.object({ groupId: z.number(), userId: z.number() }))
+    .input(z.object({ groupId: z.number(), userId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const packageDetails = await ctx.db
+      const packageDetails = await db
         .select()
-        .from(approvalGroups)
-        .innerJoin(packages, eq(approvalGroups.packageId, packages.id))
-        .where(eq(approvalGroups.id, input.groupId))
+        .from(approvalGroupsTable)
+        .innerJoin(
+          packagesTable,
+          eq(approvalGroupsTable.packageId, packagesTable.id),
+        )
+        .where(eq(approvalGroupsTable.id, input.groupId))
         .limit(1);
 
-      const isMember = await ctx.db
+      const isMember = await db
         .select()
-        .from(packageMembers)
+        .from(packageMembersTable)
         .where(
           and(
-            eq(packageMembers.packageId, packageDetails[0].packageId),
-            eq(packageMembers.userId, ctx.user.id),
+            eq(packageMembersTable.packageId, packageDetails[0].packages.id),
+            eq(packageMembersTable.userId, ctx.user.id),
           ),
         )
         .limit(1);
@@ -89,26 +93,29 @@ export const approvalProcedures = {
           message: "You do not have permission to modify this package",
         });
       }
-      return ctx.db.insert(approvalGroupMembers).values(input);
+      return db.insert(approvalGroupMembersTable).values(input);
     }),
 
   removeUserFromApprovalGroup: protectedProcedure
-    .input(z.object({ groupId: z.number(), userId: z.number() }))
+    .input(z.object({ groupId: z.number(), userId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const packageDetails = await ctx.db
+      const packageDetails = await db
         .select()
-        .from(approvalGroups)
-        .innerJoin(packages, eq(approvalGroups.packageId, packages.id))
-        .where(eq(approvalGroups.id, input.groupId))
+        .from(approvalGroupsTable)
+        .innerJoin(
+          packagesTable,
+          eq(approvalGroupsTable.packageId, packagesTable.id),
+        )
+        .where(eq(approvalGroupsTable.id, input.groupId))
         .limit(1);
 
-      const isMember = await ctx.db
+      const isMember = await db
         .select()
-        .from(packageMembers)
+        .from(packageMembersTable)
         .where(
           and(
-            eq(packageMembers.packageId, packageDetails[0].packageId),
-            eq(packageMembers.userId, ctx.user.id),
+            eq(packageMembersTable.packageId, packageDetails[0].packages.id),
+            eq(packageMembersTable.userId, ctx.user.id),
           ),
         )
         .limit(1);
@@ -119,12 +126,12 @@ export const approvalProcedures = {
           message: "You do not have permission to modify this package",
         });
       }
-      return ctx.db
-        .delete(approvalGroupMembers)
+      return db
+        .delete(approvalGroupMembersTable)
         .where(
           and(
-            eq(approvalGroupMembers.groupId, input.groupId),
-            eq(approvalGroupMembers.userId, input.userId),
+            eq(approvalGroupMembersTable.groupId, input.groupId),
+            eq(approvalGroupMembersTable.userId, input.userId),
           ),
         );
     }),
@@ -133,38 +140,38 @@ export const approvalProcedures = {
     .input(z.object({ requestId: z.number() }))
     .mutation(async ({ input, ctx }) => {
       // Add the user's approval
-      await ctx.db
-        .insert(approvals)
+      await db
+        .insert(approvalsTable)
         .values({ requestId: input.requestId, userId: ctx.user.id });
 
       // Check if the request should be approved
-      const request = await ctx.db
+      const request = await db
         .select()
-        .from(approvalRequests)
-        .where(eq(approvalRequests.id, input.requestId))
+        .from(approvalRequestsTable)
+        .where(eq(approvalRequestsTable.id, input.requestId))
         .limit(1);
 
-      const approvalGroups = await ctx.db
+      const approvalGroups = await db
         .select()
-        .from(approvalGroups)
-        .where(eq(approvalGroups.packageId, request[0].packageId));
+        .from(approvalGroupsTable)
+        .where(eq(approvalGroupsTable.packageId, request[0].packageId));
 
-      const approvedGroups = await ctx.db
+      const approvedGroups = await db
         .select()
-        .from(approvals)
+        .from(approvalsTable)
         .innerJoin(
-          approvalGroupMembers,
-          eq(approvals.userId, approvalGroupMembers.userId),
+          approvalGroupMembersTable,
+          eq(approvalsTable.userId, approvalGroupMembersTable.userId),
         )
-        .where(eq(approvals.requestId, input.requestId))
-        .groupBy(approvalGroupMembers.groupId);
+        .where(eq(approvalsTable.requestId, input.requestId))
+        .groupBy(approvalGroupMembersTable.groupId);
 
       if (approvedGroups.length === approvalGroups.length) {
         // All groups have at least one approval, update the request status
-        await ctx.db
-          .update(approvalRequests)
+        await db
+          .update(approvalRequestsTable)
           .set({ status: "approved" })
-          .where(eq(approvalRequests.id, input.requestId));
+          .where(eq(approvalRequestsTable.id, input.requestId));
       }
 
       return { success: true };
@@ -173,7 +180,7 @@ export const approvalProcedures = {
   createApprovalRequest: protectedProcedure
     .input(z.object({ packageId: z.number(), title: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      return ctx.db.insert(approvalRequests).values({
+      return db.insert(approvalRequestsTable).values({
         ...input,
         status: "pending",
       });

@@ -1,16 +1,49 @@
 import { protectedProcedure } from "../trpc";
 import { z } from "zod";
-import { devices } from "../schema";
+import { devicesTable } from "../schema";
 import { eq } from "drizzle-orm";
+import { db } from "../db";
+
+export const DeviceZodSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  createdAt: z.date(),
+});
 
 export const deviceProcedures = {
-  getDevices: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.select().from(devices).where(eq(devices.userId, ctx.user.id));
-  }),
+  getDevices: protectedProcedure
+    .input(z.void())
+    .output(z.array(DeviceZodSchema))
+    .query(async ({ ctx }) => {
+      return db
+        .select({
+          id: devicesTable.id,
+          name: devicesTable.name,
+          createdAt: devicesTable.createdAt,
+        })
+        .from(devicesTable)
+        .where(eq(devicesTable.userId, ctx.user.id));
+    }),
 
   registerDevice: protectedProcedure
-    .input(z.object({ name: z.string() }))
+    .input(z.object({ name: z.string(), fcmToken: z.string() }))
+    .output(DeviceZodSchema)
     .mutation(async ({ input, ctx }) => {
-      return ctx.db.insert(devices).values({ ...input, userId: ctx.user.id });
+      const [device] = await db
+        .insert(devicesTable)
+        .values({ ...input, userId: ctx.user.id })
+        .returning({
+          id: devicesTable.id,
+          name: devicesTable.name,
+          createdAt: devicesTable.createdAt,
+        })
+        .onConflictDoUpdate({
+          target: [devicesTable.id],
+          set: {
+            name: input.name,
+          },
+        });
+
+      return device;
     }),
 };

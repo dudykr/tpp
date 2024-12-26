@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
-import { withAuth } from "@/components/withAuth";
+
 import { useRouter } from "next/navigation";
 
-function CreatePackage() {
+export default function CreatePackage() {
   const [packageName, setPackageName] = useState("");
   const createPackageMutation = trpc.createPackage.useMutation();
   const router = useRouter();
@@ -55,5 +55,3 @@ function CreatePackage() {
     </div>
   );
 }
-
-export default withAuth(CreatePackage);
