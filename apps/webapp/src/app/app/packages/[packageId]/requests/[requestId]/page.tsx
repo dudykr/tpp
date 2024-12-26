@@ -26,7 +26,7 @@ export default function ApprovalRequestDetails({
       });
       // Implement WebAuthn verification here
       alert("Approval submitted successfully!");
-      refetch();
+      void refetch();
     } catch (error) {
       console.error("Error submitting approval:", error);
       alert("Failed to submit approval. Please try again.");

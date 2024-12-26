@@ -31,7 +31,7 @@ export default function PackageMembers({
           email: newMemberEmail.trim(),
         });
         setNewMemberEmail("");
-        refetch();
+        void refetch();
       } catch (error) {
         console.error("Error adding member:", error);
         alert("Failed to add member. Please try again.");
@@ -39,13 +39,13 @@ export default function PackageMembers({
     }
   };
 
-  const handleRemoveMember = async (userId: number) => {
+  const handleRemoveMember = async (userId: string) => {
     try {
       await removeMemberMutation.mutateAsync({
         packageId: parseInt(params.packageId),
         userId,
       });
-      refetch();
+      void refetch();
     } catch (error) {
       console.error("Error removing member:", error);
       alert("Failed to remove member. Please try again.");

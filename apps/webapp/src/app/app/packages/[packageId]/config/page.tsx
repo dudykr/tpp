@@ -33,7 +33,7 @@ export default function PackageApprovalConfig(props: Props) {
           name: newGroupName.trim(),
         });
         setNewGroupName("");
-        refetch();
+        void refetch();
       } catch (error) {
         console.error("Error creating group:", error);
         alert("Failed to create group. Please try again.");
