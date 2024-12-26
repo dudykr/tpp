@@ -12,7 +12,8 @@ type Props = {
 export default function CreateApprovalRequest(props: Props) {
   const params = use(props.params);
   const [title, setTitle] = useState("");
-  const createRequestMutation = trpc.createApprovalRequest.useMutation();
+  const createRequestMutation =
+    trpc.approvals.createApprovalRequest.useMutation();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -11,9 +11,10 @@ type Props = {
 export default function PackageDetails(props: Props) {
   const params = use(props.params);
 
-  const { data: packageDetails, isLoading } = trpc.getPackageDetails.useQuery({
-    packageId: parseInt(params.packageId),
-  });
+  const { data: packageDetails, isLoading } =
+    trpc.packages.getPackageDetails.useQuery({
+      packageId: parseInt(params.packageId),
+    });
 
   if (isLoading) return <div>Loading...</div>;
 

@@ -1,4 +1,4 @@
-import { protectedProcedure } from "../trpc";
+import { protectedProcedure, router } from "../trpc";
 import { z } from "zod";
 import {
   approvalRequestsTable,
@@ -14,7 +14,7 @@ import { db } from "../db";
 
 const ApprovalRequestStatus = z.enum(["pending", "approved", "rejected"]);
 
-export const approvalProcedures = {
+export const approvalProcedures = router({
   getApprovalRequests: protectedProcedure
     .input(z.object({ packageId: z.number() }))
     .query(async ({ input, ctx }) => {
@@ -185,4 +185,4 @@ export const approvalProcedures = {
         status: "pending",
       });
     }),
-};
+});

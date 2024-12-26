@@ -1,4 +1,4 @@
-import { protectedProcedure } from "../trpc";
+import { protectedProcedure, router } from "../trpc";
 import { z } from "zod";
 import { packagesTable, packageMembersTable, usersTable } from "../schema";
 import { eq, and } from "drizzle-orm";
@@ -12,7 +12,7 @@ const PackageZodSchema = z.object({
   ownerId: z.string(),
 });
 
-export const packageProcedures = {
+export const packageProcedures = router({
   getPackages: protectedProcedure
     .input(z.void())
     .output(z.array(PackageZodSchema))
@@ -120,4 +120,4 @@ export const packageProcedures = {
 
       return { success: true };
     }),
-};
+});

@@ -5,10 +5,10 @@ import { trpc } from "@/utils/trpc";
 import { Button } from "@/components/ui/button";
 import { ApiOutput } from "@/server/router";
 
-type Data = ApiOutput["getPackages"];
+type Data = ApiOutput["packages"]["getPackages"];
 
 export default function Packages() {
-  const [data] = trpc.getPackages.useSuspenseQuery();
+  const [data] = trpc.packages.getPackages.useSuspenseQuery();
   const packages: Data = data;
 
   return (

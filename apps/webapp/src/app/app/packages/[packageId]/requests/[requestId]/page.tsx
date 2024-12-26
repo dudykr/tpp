@@ -15,10 +15,10 @@ export default function ApprovalRequestDetails(props: Props) {
     data: requestDetails,
     isLoading,
     refetch,
-  } = trpc.getApprovalRequests.useQuery({
+  } = trpc.approvals.getApprovalRequests.useQuery({
     packageId: parseInt(params.packageId),
   });
-  const approveMutation = trpc.approveRequest.useMutation();
+  const approveMutation = trpc.approvals.approveRequest.useMutation();
 
   const handleApprove = async () => {
     setIsApproving(true);
