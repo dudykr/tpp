@@ -2,17 +2,23 @@
 
 import Link from "next/link";
 import { trpc } from "@/utils/trpc";
+import { Button } from "@/components/ui/button";
+import { ApiOutput } from "@/server/router";
+
+type Data = ApiOutput["getPackages"];
 
 export default function Packages() {
-  const { data: packages, isLoading } = trpc.getPackages.useQuery();
-
-  if (isLoading) return <div>Loading...</div>;
+  const [data] = trpc.getPackages.useSuspenseQuery();
+  const packages: Data = data;
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Your Packages</h1>
+      <Link href="/app/packages/create">
+        <Button>Create Package</Button>
+      </Link>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {packages?.map((pkg) => (
+        {packages.map((pkg) => (
           <Link
             key={pkg.id}
             href={`/app/packages/${pkg.id}`}

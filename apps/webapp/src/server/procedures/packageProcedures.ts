@@ -5,10 +5,20 @@ import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
 
+const PackageZodSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  createdAt: z.date(),
+  ownerId: z.string(),
+});
+
 export const packageProcedures = {
-  getPackages: protectedProcedure.query(async ({ ctx }) => {
-    return db.select().from(packagesTable);
-  }),
+  getPackages: protectedProcedure
+    .input(z.void())
+    .output(z.array(PackageZodSchema))
+    .query(async ({ ctx }) => {
+      return db.select().from(packagesTable);
+    }),
 
   getPackageDetails: protectedProcedure
     .input(z.object({ packageId: z.number() }))
