@@ -18,7 +18,7 @@ import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
 import { MessagePayload } from "firebase/messaging";
-import { initializeApp } from "firebase-admin/app";
+import { cert, initializeApp } from "firebase-admin/app";
 import { googleCredentials } from "../google";
 
 const PackageZodSchema = z.object({
@@ -29,8 +29,8 @@ const PackageZodSchema = z.object({
 });
 
 try {
-  await initializeApp({
-    credential: googleCredentials,
+  initializeApp({
+    credential: cert(googleCredentials),
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
   });
 } catch (e) {
