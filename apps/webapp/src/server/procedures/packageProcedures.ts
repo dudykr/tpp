@@ -33,7 +33,9 @@ try {
     credential: googleCredentials,
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
   });
-} catch (ignored) {}
+} catch (e) {
+  console.error(e);
+}
 
 export const packageProcedures = router({
   getPackages: protectedProcedure
@@ -217,11 +219,20 @@ export const packageProcedures = router({
         },
         webpush: {
           fcmOptions: {
-            link: "http://localhost:9000/packages",
+            link: `https://tpp.dudy.dev/app/packages/${input.packageId}/requests/${request.id}`,
           },
         },
         tokens: devices.map((device) => device.fcmToken),
       };
+
+      try {
+        await initializeApp({
+          credential: googleCredentials,
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+        });
+      } catch (e) {
+        console.error(e);
+      }
 
       const pushResults = await getMessaging().sendEachForMulticast(message);
       console.log("pushResults", pushResults);
