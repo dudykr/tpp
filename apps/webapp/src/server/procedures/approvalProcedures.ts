@@ -17,7 +17,7 @@ import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
-import { isoUint8Array } from "@simplewebauthn/server/helpers";
+import { isoBase64URL, isoUint8Array } from "@simplewebauthn/server/helpers";
 import { fromBase64URLString } from "./deviceProcedures";
 
 const ApprovalRequestStatus = z.enum(["pending", "approved", "rejected"]);
@@ -238,7 +238,9 @@ export const approvalProcedures = router({
 
       const verificationResult = await verifyAuthenticationResponse({
         response: input.result,
-        expectedChallenge: `approval-request:${input.requestId.toString()}`,
+        expectedChallenge: isoBase64URL.fromUTF8String(
+          `approval-request:${input.requestId.toString()}`,
+        ),
         expectedOrigin: process.env.WEBAUTHN_ORIGIN!,
         expectedRPID: process.env.WEBAUTHN_RP_ID!,
         credential: {
