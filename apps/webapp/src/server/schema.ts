@@ -94,6 +94,33 @@ export const authenticators = pgTable(
   }),
 );
 
+export const approvalAuthenticators = pgTable(
+  "approval_authenticator",
+  {
+    credentialID: text("credentialID").notNull().unique(),
+    userId: text("userId")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    credentialPublicKey: text("credentialPublicKey").notNull(),
+    counter: integer("counter").notNull(),
+    credentialDeviceType: text("credentialDeviceType").notNull(),
+    credentialBackedUp: boolean("credentialBackedUp").notNull(),
+    transports: text("transports"),
+    deviceId: integer("device_id")
+      .references(() => devicesTable.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (authenticator) => ({
+    compositePK: primaryKey({
+      columns: [authenticator.userId, authenticator.credentialID],
+    }),
+    userDeviceUnique: uniqueIndex("user_device_unique").on(
+      authenticator.userId,
+      authenticator.deviceId,
+    ),
+  }),
+);
+
 export const devicesTable = pgTable(
   "devices",
   {

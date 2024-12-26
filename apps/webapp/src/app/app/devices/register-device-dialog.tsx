@@ -14,19 +14,53 @@ import { trpc } from "@/utils/trpc";
 import "@/lib/firebase";
 import { getMessaging, getToken } from "firebase/messaging";
 import { getAuth, signInAnonymously } from "firebase/auth";
+import { startRegistration } from "@simplewebauthn/browser";
 
 export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
   const [open, setOpen] = useState(false);
   const [deviceName, setDeviceName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [registeredDeviceId, setRegisteredDeviceId] = useState<number | null>(
+    null,
+  );
 
   const registerDevice = trpc.devices.registerDevice.useMutation({
-    onSuccess: () => {
-      setOpen(false);
-      setDeviceName("");
-      onAdd();
+    onSuccess: (device) => {
+      setRegisteredDeviceId(device.id);
+      handleWebAuthnRegistration(device.id);
     },
   });
+
+  const generateWebAuthnOptions =
+    trpc.devices.generateWebAuthnRegistrationOptions.useMutation();
+  const verifyWebAuthnRegistration =
+    trpc.devices.verifyWebAuthnRegistration.useMutation({
+      onSuccess: () => {
+        setOpen(false);
+        setDeviceName("");
+        setRegisteredDeviceId(null);
+        onAdd();
+      },
+    });
+
+  const handleWebAuthnRegistration = async (deviceId: number) => {
+    try {
+      const options = await generateWebAuthnOptions.mutateAsync({ deviceId });
+      const registrationResponse = await startRegistration({
+        optionsJSON: options,
+        useAutoRegister: true,
+      });
+
+      await verifyWebAuthnRegistration.mutateAsync({
+        deviceId,
+        registrationResponse,
+        challenge: options.challenge,
+      });
+    } catch (error) {
+      console.error("Error registering WebAuthn:", error);
+      setIsLoading(false);
+    }
+  };
 
   const handleRegister = async () => {
     try {
@@ -52,7 +86,6 @@ export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
       });
     } catch (error) {
       console.error("Error registering device:", error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -77,9 +110,26 @@ export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
               }
             />
           </div>
-          <Button onClick={handleRegister} disabled={!deviceName || isLoading}>
+          <Button
+            onClick={handleRegister}
+            disabled={!deviceName || isLoading || registeredDeviceId !== null}
+          >
             {isLoading ? "Registering..." : "Register Device"}
           </Button>
+          {registeredDeviceId !== null && (
+            <div className="text-center">
+              <p className="text-sm text-gray-600 mb-2">
+                Please complete the WebAuthn registration by following your
+                browser's prompts.
+              </p>
+              {generateWebAuthnOptions.isPending && (
+                <p>Preparing WebAuthn registration...</p>
+              )}
+              {verifyWebAuthnRegistration.isPending && (
+                <p>Verifying WebAuthn registration...</p>
+              )}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
