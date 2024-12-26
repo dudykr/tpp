@@ -1,4 +1,4 @@
-import { protectedProcedure } from "../trpc";
+import { protectedProcedure, router } from "../trpc";
 import { z } from "zod";
 import { devicesTable } from "../schema";
 import { eq } from "drizzle-orm";
@@ -10,7 +10,7 @@ export const DeviceZodSchema = z.object({
   createdAt: z.date(),
 });
 
-export const deviceProcedures = {
+export const deviceProcedures = router({
   getDevices: protectedProcedure
     .input(z.void())
     .output(z.array(DeviceZodSchema))
@@ -46,4 +46,4 @@ export const deviceProcedures = {
 
       return device;
     }),
-};
+});

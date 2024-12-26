@@ -11,18 +11,18 @@ export default function PackageMembers(props: Props) {
   const params = use(props.params);
 
   const [newMemberEmail, setNewMemberEmail] = useState("");
-  const { data: packageDetails } = trpc.getPackageDetails.useQuery({
+  const { data: packageDetails } = trpc.packages.getPackageDetails.useQuery({
     packageId: parseInt(params.packageId),
   });
   const {
     data: members,
     isLoading,
     refetch,
-  } = trpc.getPackageMembers.useQuery({
+  } = trpc.packages.getPackageMembers.useQuery({
     packageId: parseInt(params.packageId),
   });
-  const addMemberMutation = trpc.addPackageMember.useMutation();
-  const removeMemberMutation = trpc.removePackageMember.useMutation();
+  const addMemberMutation = trpc.packages.addPackageMember.useMutation();
+  const removeMemberMutation = trpc.packages.removePackageMember.useMutation();
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
