@@ -1,5 +1,9 @@
 import { protectedProcedure, router } from "../trpc";
-import { getMessaging } from "firebase-admin/messaging";
+import {
+  getMessaging,
+  Message,
+  MulticastMessage,
+} from "firebase-admin/messaging";
 import { z } from "zod";
 import {
   packagesTable,
@@ -13,6 +17,7 @@ import {
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
+import { MessagePayload } from "firebase/messaging";
 
 const PackageZodSchema = z.object({
   id: z.number(),
@@ -182,8 +187,21 @@ export const packageProcedures = router({
 
       // Send push to all members in the approval group for this package.
 
-      const message = {
-        data: { score: "850", time: "2:45" },
+      const message: MulticastMessage = {
+        notification: {
+          title: "New approval request",
+          body: "A new approval request has been created",
+        },
+        webpush: {
+          notification: {
+            actions: [
+              {
+                action: "http://localhost:9000/packages",
+                title: "View package",
+              },
+            ],
+          },
+        },
         tokens: devices.map((device) => device.fcmToken),
       };
 
