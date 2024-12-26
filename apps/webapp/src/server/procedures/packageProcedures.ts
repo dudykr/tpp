@@ -33,7 +33,9 @@ try {
     credential: googleCredentials,
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
   });
-} catch (ignored) {}
+} catch (e) {
+  console.error(e);
+}
 
 export const packageProcedures = router({
   getPackages: protectedProcedure
