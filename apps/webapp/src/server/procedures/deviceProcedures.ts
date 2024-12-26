@@ -1,8 +1,12 @@
 import { protectedProcedure, router } from "../trpc";
 import { z } from "zod";
-import { devicesTable } from "../schema";
+import { approvalAuthenticators, devicesTable } from "../schema";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
+import {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+} from "@simplewebauthn/server";
 
 export const DeviceZodSchema = z.object({
   id: z.number(),
@@ -38,12 +42,65 @@ export const deviceProcedures = router({
           createdAt: devicesTable.createdAt,
         })
         .onConflictDoUpdate({
-          target: [devicesTable.id],
+          target: [devicesTable.fcmToken],
           set: {
             name: input.name,
           },
         });
 
       return device;
+    }),
+
+  generateWebAuthnRegistrationOptions: protectedProcedure
+    .input(z.object({ deviceId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const options = await generateRegistrationOptions({
+        rpName: "Dudy TPP",
+        rpID: process.env.WEBAUTHN_RP_ID!,
+        userID: ctx.user.id,
+        userName: ctx.user.email!,
+        attestationType: "none",
+      });
+
+      return options;
+    }),
+
+  verifyWebAuthnRegistration: protectedProcedure
+    .input(
+      z.object({
+        deviceId: z.number(),
+        registrationResponse: z.any(),
+        challenge: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const verification = await verifyRegistrationResponse({
+        response: input.registrationResponse,
+        expectedChallenge: input.challenge,
+        expectedOrigin: process.env.WEBAUTHN_ORIGIN!,
+        expectedRPID: process.env.WEBAUTHN_RP_ID!,
+      });
+
+      if (verification.verified) {
+        const { credentialID, credentialPublicKey, counter } =
+          verification.registrationInfo!;
+
+        await db.insert(approvalAuthenticators).values({
+          credentialID: Buffer.from(credentialID).toString("base64url"),
+          userId: ctx.user.id,
+          providerAccountId: ctx.user.id,
+          credentialPublicKey:
+            Buffer.from(credentialPublicKey).toString("base64url"),
+          counter,
+          credentialDeviceType:
+            verification.registrationInfo!.credentialDeviceType,
+          credentialBackedUp: verification.registrationInfo!.credentialBackedUp,
+          transports: input.registrationResponse.response.transports?.join(","),
+        });
+
+        return { verified: true };
+      }
+
+      return { verified: false };
     }),
 });
