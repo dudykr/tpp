@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
 import { use } from "react";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 type Props = {
   params: Promise<{ packageId: string; requestId: string }>;
@@ -18,15 +19,15 @@ export default function ApprovalRequestDetails(props: Props) {
   } = trpc.approvals.getApprovalRequests.useQuery({
     packageId: parseInt(params.packageId),
   });
-  const approveMutation = trpc.approvals.approveRequest.useMutation();
+  const startApproval = trpc.approvals.startApprovalProcess.useMutation();
 
   const handleApprove = async () => {
     setIsApproving(true);
     try {
-      await approveMutation.mutateAsync({
+      const { options } = await startApproval.mutateAsync({
         requestId: parseInt(params.requestId),
       });
-      // Implement WebAuthn verification here
+      const result = await startAuthentication(options);
       alert("Approval submitted successfully!");
       void refetch();
     } catch (error) {

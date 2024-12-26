@@ -13,7 +13,7 @@ export default function Devices() {
   const utils = trpc.useUtils();
   const unregisterMutation = trpc.devices.unregisterDevice.useMutation({
     onSuccess: () => {
-      utils.devices.getDevices.invalidate();
+      void utils.devices.getDevices.invalidate();
     },
   });
 

@@ -1,9 +1,24 @@
 import { protectedProcedure, router } from "../trpc";
+import {
+  getMessaging,
+  Message,
+  MulticastMessage,
+} from "firebase-admin/messaging";
 import { z } from "zod";
-import { packagesTable, packageMembersTable, usersTable } from "../schema";
+import {
+  packagesTable,
+  packageMembersTable,
+  usersTable,
+  approvalRequestsTable,
+  approvalGroupsTable,
+  approvalGroupMembersTable,
+  devicesTable,
+} from "../schema";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
+import { MessagePayload } from "firebase/messaging";
+import { initializeApp } from "firebase-admin/app";
 
 const PackageZodSchema = z.object({
   id: z.number(),
@@ -11,6 +26,20 @@ const PackageZodSchema = z.object({
   createdAt: z.date(),
   ownerId: z.string(),
 });
+
+try {
+  const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  };
+
+  await initializeApp(firebaseConfig);
+} catch (ignored) {}
 
 export const packageProcedures = router({
   getPackages: protectedProcedure
@@ -69,10 +98,19 @@ export const packageProcedures = router({
 
   getPackageMembers: protectedProcedure
     .input(z.object({ packageId: z.number() }))
+    .output(
+      z.array(
+        z.object({
+          userId: z.string(),
+          name: z.string().nullable(),
+          email: z.string().email().nullable(),
+        }),
+      ),
+    )
     .query(async ({ input, ctx }) => {
       const members = await db
         .select({
-          id: usersTable.id,
+          userId: usersTable.id,
           name: usersTable.name,
           email: usersTable.email,
         })
@@ -119,5 +157,85 @@ export const packageProcedures = router({
         );
 
       return { success: true };
+    }),
+
+  startPublishing: protectedProcedure
+    .input(z.object({ packageId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const [request] = await db
+        .insert(approvalRequestsTable)
+        .values({
+          packageId: input.packageId,
+          title: `Publish package at ${new Date().toISOString()}`,
+          status: "pending",
+        })
+        .returning();
+
+      if (!request) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create approval request",
+        });
+      }
+
+      const sqGroups = db
+        .select({
+          id: approvalGroupsTable.id,
+        })
+        .from(approvalGroupsTable)
+        .innerJoin(
+          approvalGroupMembersTable,
+          eq(approvalGroupsTable.id, approvalGroupMembersTable.groupId),
+        )
+        .where(eq(approvalGroupsTable.packageId, input.packageId))
+        .as("sqGroups");
+      const sqMembers = db
+        .select({
+          userId: approvalGroupMembersTable.userId,
+        })
+        .from(approvalGroupMembersTable)
+        .innerJoin(sqGroups, eq(approvalGroupMembersTable.groupId, sqGroups.id))
+        .where(eq(approvalGroupMembersTable.groupId, sqGroups.id))
+        .as("sqMembers");
+      const sqUsers = db
+        .select({
+          id: usersTable.id,
+        })
+        .from(usersTable)
+        .innerJoin(sqMembers, eq(usersTable.id, sqMembers.userId))
+        .where(eq(usersTable.id, sqMembers.userId))
+        .as("sqUsers");
+      const devices = await db
+        .select({
+          id: devicesTable.id,
+          fcmToken: devicesTable.fcmToken,
+        })
+        .from(devicesTable)
+        .innerJoin(sqUsers, eq(devicesTable.userId, sqUsers.id))
+        .where(eq(devicesTable.userId, sqUsers.id));
+
+      // Send push to all members in the approval group for this package.
+
+      const message: MulticastMessage = {
+        notification: {
+          title: "New approval request",
+          body: "A new approval request has been created",
+        },
+        webpush: {
+          notification: {
+            actions: [
+              {
+                action: "http://localhost:9000/packages",
+                title: "View package",
+              },
+            ],
+          },
+        },
+        tokens: devices.map((device) => device.fcmToken),
+      };
+
+      await getMessaging().sendEachForMulticast(message);
+
+      return request;
     }),
 });

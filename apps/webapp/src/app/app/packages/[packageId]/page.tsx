@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { trpc } from "@/utils/trpc";
 import { use } from "react";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   params: Promise<{ packageId: string }>;
@@ -10,6 +11,12 @@ type Props = {
 
 export default function PackageDetails(props: Props) {
   const params = use(props.params);
+
+  const startPublishing = trpc.packages.startPublishing.useMutation({
+    onSuccess: () => {
+      alert("Publishing started");
+    },
+  });
 
   const { data: packageDetails, isLoading } =
     trpc.packages.getPackageDetails.useQuery({
@@ -55,6 +62,18 @@ export default function PackageDetails(props: Props) {
         >
           Manage Members
         </Link>
+      </div>
+
+      <div>
+        <Button
+          onClick={() => {
+            void startPublishing.mutateAsync({
+              packageId: parseInt(params.packageId),
+            });
+          }}
+        >
+          Demo: Start publishing your package
+        </Button>
       </div>
     </div>
   );

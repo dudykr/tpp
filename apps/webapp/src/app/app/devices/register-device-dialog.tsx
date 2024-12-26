@@ -27,7 +27,7 @@ export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
   const registerDevice = trpc.devices.registerDevice.useMutation({
     onSuccess: (device) => {
       setRegisteredDeviceId(device.id);
-      handleWebAuthnRegistration(device.id);
+      void handleWebAuthnRegistration(device.id);
     },
   });
 
@@ -120,7 +120,7 @@ export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
             <div className="text-center">
               <p className="text-sm text-gray-600 mb-2">
                 Please complete the WebAuthn registration by following your
-                browser's prompts.
+                browser&apos;s prompts.
               </p>
               {generateWebAuthnOptions.isPending && (
                 <p>Preparing WebAuthn registration...</p>

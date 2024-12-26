@@ -7,10 +7,15 @@ import {
   approvalsTable,
   packagesTable,
   packageMembersTable,
+  approvalAuthenticators,
+  usersTable,
 } from "../schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, Simplify } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
+import { startAuthentication } from "@simplewebauthn/browser";
+import { generateAuthenticationOptions } from "@simplewebauthn/server";
+import { isoUint8Array } from "@simplewebauthn/server/helpers";
 
 const ApprovalRequestStatus = z.enum(["pending", "approved", "rejected"]);
 
@@ -22,6 +27,76 @@ export const approvalProcedures = router({
         .select()
         .from(approvalRequestsTable)
         .where(eq(approvalRequestsTable.packageId, input.packageId));
+    }),
+
+  startApprovalProcess: protectedProcedure
+    .input(z.object({ requestId: z.number() }))
+    .output(z.object({ options: z.any() }))
+    .mutation(async ({ input, ctx }) => {
+      const sqPackage = db
+        .select({
+          packageId: approvalRequestsTable.packageId,
+        })
+        .from(approvalRequestsTable)
+        .where(eq(approvalRequestsTable.id, input.requestId))
+        .limit(1)
+        .as("sqPackage");
+
+      const sqGroups = db
+        .select({
+          groupId: approvalGroupsTable.id,
+        })
+        .from(approvalGroupsTable)
+        .innerJoin(
+          sqPackage,
+          eq(approvalGroupsTable.packageId, sqPackage.packageId),
+        )
+        .limit(1)
+        .as("sqGroups");
+
+      const [approvalGroupMembership] = await db
+        .select({
+          groupId: approvalGroupMembersTable.groupId,
+        })
+        .from(approvalGroupMembersTable)
+        .innerJoin(
+          sqGroups,
+          eq(approvalGroupMembersTable.groupId, sqGroups.groupId),
+        )
+        .where(eq(approvalGroupMembersTable.userId, ctx.user.id))
+        .limit(1);
+
+      if (!approvalGroupMembership)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "You are not a member of any approval groups for this package",
+        });
+
+      const authenticators = await db
+        .select()
+        .from(approvalAuthenticators)
+        .where(eq(approvalAuthenticators.userId, ctx.user.id));
+
+      if (authenticators.length === 0)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "WebAuthn is not configured for this account",
+        });
+
+      const options = await generateAuthenticationOptions({
+        rpID: process.env.WEBAUTHN_RP_ID!,
+        allowCredentials: authenticators.map((authenticator) => ({
+          id: authenticator.credentialID,
+        })),
+        challenge: isoUint8Array.fromUTF8String(input.requestId.toString()),
+        timeout: 60000,
+        userVerification: "required",
+      });
+
+      return {
+        options,
+      };
     }),
 
   getPackageApprovalGroups: protectedProcedure
@@ -184,5 +259,23 @@ export const approvalProcedures = router({
         ...input,
         status: "pending",
       });
+    }),
+
+  getGroupMembers: protectedProcedure
+    .input(z.object({ groupId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const groupMembers = await db
+        .select({
+          userId: approvalGroupMembersTable.userId,
+          name: usersTable.name,
+        })
+        .from(approvalGroupMembersTable)
+        .innerJoin(
+          usersTable,
+          eq(approvalGroupMembersTable.userId, usersTable.id),
+        )
+        .where(eq(approvalGroupMembersTable.groupId, input.groupId));
+
+      return groupMembers;
     }),
 });
