@@ -2,7 +2,7 @@ import { isoUint8Array } from "@simplewebauthn/server/helpers";
 import { protectedProcedure, router } from "../trpc";
 import { z } from "zod";
 import { approvalAuthenticators, devicesTable } from "../schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import {
   generateRegistrationOptions,
