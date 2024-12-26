@@ -82,14 +82,26 @@ export const packageProcedures = router({
   createPackage: protectedProcedure
     .input(z.object({ name: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const newPackage = await db
+      const [newPackage] = await db
         .insert(packagesTable)
         .values({ ...input, ownerId: ctx.user.id })
         .returning();
       await db
         .insert(packageMembersTable)
-        .values({ packageId: newPackage[0].id, userId: ctx.user.id });
-      return newPackage[0];
+        .values({ packageId: newPackage.id, userId: ctx.user.id });
+
+      const [approvalGroup] = await db
+        .insert(approvalGroupsTable)
+        .values({
+          packageId: newPackage.id,
+          name: "(Default)",
+        })
+        .returning();
+      await db
+        .insert(approvalGroupMembersTable)
+        .values({ groupId: approvalGroup.id, userId: ctx.user.id });
+
+      return newPackage;
     }),
 
   getPackageMembers: protectedProcedure
