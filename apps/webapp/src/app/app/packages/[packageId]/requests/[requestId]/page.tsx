@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { trpc } from "@/utils/trpc";
+import { use } from "react";
 
-export default function ApprovalRequestDetails({
-  params,
-}: {
-  params: { packageId: string; requestId: string };
-}) {
+type Props = {
+  params: Promise<{ packageId: string; requestId: string }>;
+};
+
+export default function ApprovalRequestDetails(props: Props) {
+  const params = use(props.params);
   const [isApproving, setIsApproving] = useState(false);
   const {
     data: requestDetails,

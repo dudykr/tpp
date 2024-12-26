@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { trpc } from "@/utils/trpc";
 
-export default function PackageMembers({
-  params,
-}: {
-  params: { packageId: string };
-}) {
+type Props = {
+  params: Promise<{ packageId: string }>;
+};
+
+export default function PackageMembers(props: Props) {
+  const params = use(props.params);
+
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const { data: packageDetails } = trpc.getPackageDetails.useQuery({
     packageId: parseInt(params.packageId),

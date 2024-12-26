@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { trpc } from "@/utils/trpc";
+import { use } from "react";
 
-export default function PackageDetails({
-  params,
-}: {
-  params: { packageId: string };
-}) {
+type Props = {
+  params: Promise<{ packageId: string }>;
+};
+
+export default function PackageDetails(props: Props) {
+  const params = use(props.params);
+
   const { data: packageDetails, isLoading } = trpc.getPackageDetails.useQuery({
     packageId: parseInt(params.packageId),
   });

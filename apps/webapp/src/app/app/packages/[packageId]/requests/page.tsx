@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { trpc } from "@/utils/trpc";
+import { use } from "react";
 
-export default function ApprovalRequests({
-  params,
-}: {
-  params: { packageId: string };
-}) {
+type Props = {
+  params: Promise<{ packageId: string }>;
+};
+
+export default function ApprovalRequests(props: Props) {
+  const params = use(props.params);
+
   const { data: requests, isLoading } = trpc.getApprovalRequests.useQuery({
     packageId: parseInt(params.packageId),
   });
