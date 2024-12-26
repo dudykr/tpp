@@ -234,7 +234,8 @@ export const packageProcedures = router({
         tokens: devices.map((device) => device.fcmToken),
       };
 
-      await getMessaging().sendEachForMulticast(message);
+      const pushResults = await getMessaging().sendEachForMulticast(message);
+      console.log("pushResults", pushResults);
 
       return request;
     }),
