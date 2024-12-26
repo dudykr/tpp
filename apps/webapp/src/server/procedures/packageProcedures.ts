@@ -5,6 +5,9 @@ import {
   packageMembersTable,
   usersTable,
   approvalRequestsTable,
+  approvalGroupsTable,
+  approvalGroupMembersTable,
+  devicesTable,
 } from "../schema";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -138,10 +141,42 @@ export const packageProcedures = router({
   startPublishing: protectedProcedure
     .input(z.object({ packageId: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      return db.insert(approvalRequestsTable).values({
-        packageId: input.packageId,
-        title: `Publish package at ${new Date().toISOString()}`,
-        status: "pending",
-      });
+      const [request] = db
+        .insert(approvalRequestsTable)
+        .values({
+          packageId: input.packageId,
+          title: `Publish package at ${new Date().toISOString()}`,
+          status: "pending",
+        })
+        .returning();
+
+      if (!request) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create approval request",
+        });
+      }
+
+      const sqGroups = db
+        .select()
+        .from(approvalGroupsTable)
+        .where(eq(approvalGroupsTable.packageId, input.packageId))
+        .as("sqGroups");
+      const sqMembers = db
+        .select()
+        .from(approvalGroupMembersTable)
+        .where(eq(approvalGroupMembersTable.groupId, sqGroups.id))
+        .as("sqMembers");
+      const sqUsers = db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.id, sqMembers.userId))
+        .as("sqUsers");
+      const devices = await db
+        .select()
+        .from(devicesTable)
+        .where(eq(devicesTable.userId, sqUsers.id));
+
+      // Send push to all members in the approval group for this package.
     }),
 });
