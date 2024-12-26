@@ -27,7 +27,7 @@ export function RegisterDeviceDialog({ onAdd }: { onAdd: () => void }) {
   const registerDevice = trpc.devices.registerDevice.useMutation({
     onSuccess: (device) => {
       setRegisteredDeviceId(device.id);
-      handleWebAuthnRegistration(device.id);
+      void handleWebAuthnRegistration(device.id);
     },
   });
 
