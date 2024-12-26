@@ -101,7 +101,6 @@ export const approvalAuthenticators = pgTable(
     userId: text("userId")
       .notNull()
       .references(() => usersTable.id, { onDelete: "cascade" }),
-    providerAccountId: text("providerAccountId").notNull(),
     credentialPublicKey: text("credentialPublicKey").notNull(),
     counter: integer("counter").notNull(),
     credentialDeviceType: text("credentialDeviceType").notNull(),
@@ -115,6 +114,10 @@ export const approvalAuthenticators = pgTable(
     compositePK: primaryKey({
       columns: [authenticator.userId, authenticator.credentialID],
     }),
+    userDeviceUnique: uniqueIndex("user_device_unique").on(
+      authenticator.userId,
+      authenticator.deviceId,
+    ),
   }),
 );
 

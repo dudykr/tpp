@@ -73,7 +73,7 @@ export const deviceProcedures = router({
         userName: ctx.user.email!,
         attestationType: "none",
         excludeCredentials: existingCredentials.map((credential) => ({
-          id: credential.credentialID,
+          id: fromBase64URLString(credential.credentialID),
         })),
       });
 
@@ -103,7 +103,6 @@ export const deviceProcedures = router({
         await db.insert(approvalAuthenticators).values({
           credentialID: Buffer.from(credential.id).toString("base64url"),
           userId: ctx.user.id,
-          providerAccountId: ctx.user.id,
           credentialPublicKey: Buffer.from(credential.publicKey).toString(
             "base64url",
           ),
@@ -122,3 +121,7 @@ export const deviceProcedures = router({
       return { verified: false };
     }),
 });
+
+function fromBase64URLString(credentialID: string): any {
+  return Buffer.from(credentialID, "base64url").toString();
+}
