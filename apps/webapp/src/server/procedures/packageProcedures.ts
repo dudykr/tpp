@@ -219,7 +219,7 @@ export const packageProcedures = router({
         },
         webpush: {
           fcmOptions: {
-            link: "http://localhost:9000/packages",
+            link: `https://tpp.dudy.dev/app/packages/${input.packageId}/requests/${request.id}`,
           },
         },
         tokens: devices.map((device) => device.fcmToken),
