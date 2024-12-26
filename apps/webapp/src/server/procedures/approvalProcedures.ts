@@ -245,17 +245,26 @@ export const approvalProcedures = router({
         expectedRPID: process.env.WEBAUTHN_RP_ID!,
         credential: {
           id: fromBase64URLString(authenticator.credentialID),
-          publicKey: fromBase64URLString(authenticator.credentialPublicKey),
+          publicKey: isoBase64URL.toBuffer(
+            authenticator.credentialPublicKey,
+            "base64url",
+          ),
           counter: authenticator.counter,
         },
-        requireUserVerification: true,
-      });
-
-      if (!verificationResult.verified)
+      }).catch((e) => {
+        console.error(e);
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Invalid authentication",
         });
+      });
+
+      if (!verificationResult.verified) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Invalid authentication",
+        });
+      }
 
       // Add the user's approval
       await db
@@ -263,16 +272,23 @@ export const approvalProcedures = router({
         .values({ requestId: input.requestId, userId: ctx.user.id });
 
       // Check if the request should be approved
-      const request = await db
+      const [request] = await db
         .select()
         .from(approvalRequestsTable)
         .where(eq(approvalRequestsTable.id, input.requestId))
         .limit(1);
 
+      if (!request) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Request not found",
+        });
+      }
+
       const approvalGroups = await db
         .select()
         .from(approvalGroupsTable)
-        .where(eq(approvalGroupsTable.packageId, request[0].packageId));
+        .where(eq(approvalGroupsTable.packageId, request.packageId));
 
       const approvedGroups = await db
         .select()
@@ -283,6 +299,9 @@ export const approvalProcedures = router({
         )
         .where(eq(approvalsTable.requestId, input.requestId))
         .groupBy(approvalGroupMembersTable.groupId);
+
+      console.log("approvedGroups", approvedGroups);
+      console.log("approvalGroups", approvalGroups);
 
       if (approvedGroups.length === approvalGroups.length) {
         // All groups have at least one approval, update the request status

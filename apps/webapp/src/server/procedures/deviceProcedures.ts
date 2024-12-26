@@ -155,6 +155,6 @@ export const deviceProcedures = router({
     }),
 });
 
-export function fromBase64URLString(credentialID: string): any {
+export function fromBase64URLString(credentialID: string): string {
   return Buffer.from(credentialID, "base64url").toString();
 }
