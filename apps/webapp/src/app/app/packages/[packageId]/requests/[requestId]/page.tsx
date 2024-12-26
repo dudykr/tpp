@@ -27,7 +27,12 @@ export default function ApprovalRequestDetails(props: Props) {
       const { options } = await startApproval.mutateAsync({
         requestId: parseInt(params.requestId),
       });
-      const result = await startAuthentication(options);
+      const result = await startAuthentication({
+        optionsJSON: options,
+        useBrowserAutofill: true,
+        verifyBrowserAutofillInput: true,
+      });
+      console.log("result", result);
       alert("Approval submitted successfully!");
       void refetch();
     } catch (error) {
