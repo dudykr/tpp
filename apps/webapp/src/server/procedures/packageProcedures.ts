@@ -168,21 +168,35 @@ export const packageProcedures = router({
           id: approvalGroupsTable.id,
         })
         .from(approvalGroupsTable)
+        .innerJoin(
+          approvalGroupMembersTable,
+          eq(approvalGroupsTable.id, approvalGroupMembersTable.groupId),
+        )
         .where(eq(approvalGroupsTable.packageId, input.packageId))
         .as("sqGroups");
       const sqMembers = db
-        .select()
+        .select({
+          userId: approvalGroupMembersTable.userId,
+        })
         .from(approvalGroupMembersTable)
+        .innerJoin(sqGroups, eq(approvalGroupMembersTable.groupId, sqGroups.id))
         .where(eq(approvalGroupMembersTable.groupId, sqGroups.id))
         .as("sqMembers");
       const sqUsers = db
-        .select()
+        .select({
+          id: usersTable.id,
+        })
         .from(usersTable)
+        .innerJoin(sqMembers, eq(usersTable.id, sqMembers.userId))
         .where(eq(usersTable.id, sqMembers.userId))
         .as("sqUsers");
       const devices = await db
-        .select()
+        .select({
+          id: devicesTable.id,
+          fcmToken: devicesTable.fcmToken,
+        })
         .from(devicesTable)
+        .innerJoin(sqUsers, eq(devicesTable.userId, sqUsers.id))
         .where(eq(devicesTable.userId, sqUsers.id));
 
       // Send push to all members in the approval group for this package.
