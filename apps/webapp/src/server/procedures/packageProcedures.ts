@@ -222,13 +222,8 @@ export const packageProcedures = router({
           body: "A new approval request has been created",
         },
         webpush: {
-          notification: {
-            actions: [
-              {
-                action: "http://localhost:9000/packages",
-                title: "View package",
-              },
-            ],
+          fcmOptions: {
+            link: "http://localhost:9000/packages",
           },
         },
         tokens: devices.map((device) => device.fcmToken),
