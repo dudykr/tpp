@@ -3,9 +3,13 @@
 import { useState, useEffect } from "react";
 import { trpc } from "@/utils/trpc";
 import { RegisterDeviceDialog } from "./register-device-dialog";
+import { ApiOutput, AppRouter } from "@/server/router";
+
+type Device = ApiOutput["getDevices"][number];
 
 export default function Devices() {
-  const { data: devices } = trpc.getDevices.useQuery();
+  const { data } = trpc.getDevices.useQuery();
+  const devices = data as Device[] | undefined;
 
   return (
     <div className="space-y-6">
