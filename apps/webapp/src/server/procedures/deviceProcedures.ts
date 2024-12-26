@@ -2,7 +2,7 @@ import { isoUint8Array } from "@simplewebauthn/server/helpers";
 import { protectedProcedure, router } from "../trpc";
 import { z } from "zod";
 import { approvalAuthenticators, devicesTable } from "../schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, exists } from "drizzle-orm";
 import { db } from "../db";
 import {
   generateRegistrationOptions,
@@ -12,6 +12,7 @@ import {
 export const DeviceZodSchema = z.object({
   id: z.number(),
   name: z.string(),
+  isWebAuthnRegistered: z.boolean(),
   createdAt: z.date(),
 });
 
@@ -20,14 +21,24 @@ export const deviceProcedures = router({
     .input(z.void())
     .output(z.array(DeviceZodSchema))
     .query(async ({ ctx }) => {
-      return db
+      const devices = await db
         .select({
           id: devicesTable.id,
           name: devicesTable.name,
           createdAt: devicesTable.createdAt,
+          webAuthnId: approvalAuthenticators.credentialID,
         })
         .from(devicesTable)
+        .leftJoin(
+          approvalAuthenticators,
+          eq(approvalAuthenticators.deviceId, devicesTable.id),
+        )
         .where(eq(devicesTable.userId, ctx.user.id));
+
+      return devices.map(({ webAuthnId, ...device }) => ({
+        ...device,
+        isWebAuthnRegistered: webAuthnId !== null,
+      }));
     }),
 
   unregisterDevice: protectedProcedure
@@ -62,7 +73,16 @@ export const deviceProcedures = router({
           },
         });
 
-      return device;
+      const credentials = await db
+        .select()
+        .from(approvalAuthenticators)
+        .where(eq(approvalAuthenticators.deviceId, device.id))
+        .limit(1);
+
+      return {
+        ...device,
+        isWebAuthnRegistered: credentials.length > 0,
+      };
     }),
 
   generateWebAuthnRegistrationOptions: protectedProcedure
