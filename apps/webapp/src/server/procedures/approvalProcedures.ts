@@ -10,10 +10,9 @@ import {
   approvalAuthenticators,
   usersTable,
 } from "../schema";
-import { eq, and, Simplify } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { db } from "../db";
-import { startAuthentication } from "@simplewebauthn/browser";
 import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
@@ -94,7 +93,7 @@ export const approvalProcedures = router({
         allowCredentials: authenticators.map((authenticator) => ({
           id: fromBase64URLString(authenticator.credentialID),
         })),
-        challenge: isoUint8Array.fromUTF8String(input.requestId.toString()),
+        challenge: `approval-request:${input.requestId.toString()}`,
         timeout: 60000,
         userVerification: "required",
       });
@@ -239,7 +238,7 @@ export const approvalProcedures = router({
 
       const verificationResult = await verifyAuthenticationResponse({
         response: input.result,
-        expectedChallenge: input.requestId.toString(),
+        expectedChallenge: `approval-request:${input.requestId.toString()}`,
         expectedOrigin: process.env.WEBAUTHN_ORIGIN!,
         expectedRPID: process.env.WEBAUTHN_RP_ID!,
         credential: {
