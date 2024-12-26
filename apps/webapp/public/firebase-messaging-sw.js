@@ -3,10 +3,10 @@
 // are not available in the service worker.
 // Replace 10.13.2 with latest version of the Firebase JS SDK.
 importScripts(
-  "https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js",
+  "https://www.gstatic.com/firebasejs/11.1.0/firebase-app-compat.js",
 );
 importScripts(
-  "https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js",
+  "https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging-compat.js",
 );
 
 // Initialize the Firebase app in the service worker by passing in
@@ -25,3 +25,31 @@ firebase.initializeApp({
 // Retrieve an instance of Firebase Messaging so that it can handle background
 // messages.
 const messaging = firebase.messaging();
+
+messaging.onMessage((payload) => {
+  console.log(
+    "[firebase-messaging-sw.js] Received foreground message ",
+    payload,
+  );
+  // Customize notification here
+  const notificationTitle = "Foreground Message Title";
+  const notificationOptions = {
+    body: "Foreground Message body.",
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+messaging.onBackgroundMessage((payload) => {
+  console.log(
+    "[firebase-messaging-sw.js] Received background message ",
+    payload,
+  );
+  // Customize notification here
+  const notificationTitle = "Background Message Title";
+  const notificationOptions = {
+    body: "Background Message body.",
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
